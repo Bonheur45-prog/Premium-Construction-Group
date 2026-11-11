@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const user = getAdminSessionUserFromRequest(request);
+  const user = await getAdminSessionUserFromRequest(request);
   if (!user) {
     return Response.json({ error: "Sign in to open the admin dashboard." }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Request could not be verified." }, { status: 403 });
   }
-  if (!adminConfigurationReady()) {
+  if (!(await adminConfigurationReady())) {
     return Response.json({ error: "Create the first CMS account by setting ADMIN_DASHBOARD_USERNAME and an ADMIN_DASHBOARD_PASSWORD of at least 12 characters in .env.local, then restart the app." }, { status: 503 });
   }
   if (Number(request.headers.get("content-length") || 0) > 2_000) {
@@ -47,10 +47,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Enter a valid username and password (maximum 128 characters)." }, { status: 400 });
   }
 
-  let user: ReturnType<typeof findCmsUserByUsername> = null;
+  let user: Awaited<ReturnType<typeof findCmsUserByUsername>> = null;
   try {
-    bootstrapCmsAdmin();
-    user = findCmsUserByUsername(username);
+    await bootstrapCmsAdmin();
+    user = await findCmsUserByUsername(username);
     if (!user || !verifyCmsPassword(user, password)) {
       return Response.json({ error: "That username and password were not accepted." }, { status: 401 });
     }

@@ -1,6 +1,42 @@
 import { insights as starterInsights } from "@/lib/insights";
 import { projectCategories } from "@/lib/project-categories";
 
+export type CustomSitePage = {
+  id: string;
+  title: string;
+  slug: string;
+  status: "draft" | "published";
+  metaDescription: string;
+  hero: {
+    eyebrow: string;
+    title: string;
+    accent: string;
+    intro: string;
+    image: string;
+    imageAlt: string;
+  };
+  sections: Array<{ title: string; body: string }>;
+  closing: { title: string; body: string; action: string; href: string };
+};
+
+export const customSitePageTemplate: CustomSitePage = {
+  id: "new-page",
+  title: "New page",
+  slug: "new-page",
+  status: "draft",
+  metaDescription: "",
+  hero: {
+    eyebrow: "Premium Construction Group",
+    title: "A considered beginning",
+    accent: "for something new.",
+    intro: "Add a short introduction for this page.",
+    image: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1800&q=85",
+    imageAlt: "Modern architecture",
+  },
+  sections: [{ title: "A new section", body: "Add the content for this section." }],
+  closing: { title: "Let's talk.", body: "Tell us what you have in mind.", action: "Start a conversation", href: "/contact" },
+};
+
 export const defaultSiteContent = {
   about: {
     hero: {
@@ -210,7 +246,7 @@ export const defaultSiteContent = {
     closing: { eyebrow: "Every project starts somewhere", title: "Have a question", accent: "about what comes next?", body: "Tell us what you're planning and what you'd like to understand.", action: "Start a conversation", href: "/contact" },
   },
   contact: {
-    hero: { eyebrow: "Reach out", title: "Let's talk about", accent: "what comes next.", intro: "A good project begins with a conversation. Tell us a little about what you're planning and we'll take it from there.", reserveLabel: "Reserve a meeting" },
+    hero: { eyebrow: "Reach out", title: "Let's talk about", accent: "what comes next.", intro: "A good project begins with a conversation. Tell us a little about what you're planning and we'll take it from there.", reserveLabel: "Reserve a meeting", reserveHref: "/reservations" },
     enquiry: { kicker: "Start a conversation", title: "Tell us about", accent: "your project.", index: "01 / 02" },
     next: {
       topline: "A thoughtful start", title: "Good work starts with", accent: "good questions.", intro: "Every project is different. We'll begin by understanding what matters to you.",
@@ -227,9 +263,120 @@ export const defaultSiteContent = {
       duration: "60", durationLabel: "minutes", daysLabel: "Weekdays", timezone: "SAST", jumpLabel: "Choose a meeting time", step: "01 / Schedule", cardTitle: "Book a conversation.",
     },
   },
+  reservations: {
+    hero: {
+      eyebrow: "Book a conversation",
+      title: "Make time for",
+      accent: "your next step.",
+      intro: "Choose a convenient time to talk through your plans with our team. We will listen first, understand what you need, and help you see a clear next step.",
+      primaryLabel: "Choose a time",
+      primaryHref: "#reservation-booking",
+      secondaryLabel: "Send a project enquiry",
+      secondaryHref: "/contact",
+      image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=90",
+      imageAlt: "Construction team reviewing work together on site",
+      imageLabel: "Start with a conversation",
+      noteLabel: "A useful first step",
+      noteText: "Bring the idea. We will help shape the questions.",
+      index: "05",
+    },
+    booking: {
+      kicker: "Choose a time",
+      title: "Let's talk about",
+      accent: "what you are planning.",
+      intro: "Select an available weekday and time. Your meeting is one hour and takes place in South Africa Standard Time.",
+      duration: 60,
+      durationLabel: "minutes",
+      timezone: "SAST",
+      jumpLabel: "Go to booking form",
+      step: "01 / Schedule",
+      cardTitle: "Book a conversation.",
+      enabled: true,
+      windowDays: 90,
+      hours: "09:00–17:00",
+      weekdays: { monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: false, sunday: false },
+    },
+    preparation: {
+      kicker: "Before we meet",
+      title: "A little context",
+      accent: "goes a long way.",
+      intro: "You do not need a finished brief. A few starting details can help us make the conversation useful.",
+      steps: [
+        { number: "01", title: "The place", text: "Share the location and the kind of space you have in mind." },
+        { number: "02", title: "The purpose", text: "Tell us who the place is for and what you hope it will make possible." },
+        { number: "03", title: "Where you are now", text: "Let us know what is decided and what you are still working through." },
+      ],
+      note: "If you are early in the process, that is a good place to start.",
+    },
+    closing: { eyebrow: "Prefer to write first?", title: "Send us", accent: "a project enquiry.", body: "Share a few details and our team will get back to you.", action: "Contact the team", href: "/contact" },
+  },
+  siteSettings: {
+    brand: {
+      legalName: "Premium Construction Group Ltd",
+      primaryName: "Premium",
+      secondaryName: "Construction Group",
+      logo: "/premium-mark.png",
+      strapline: "Considered construction. Enduring value.",
+      footerDescription: "Thoughtful construction.\nClear communication.\nMade to last.",
+    },
+    header: {
+      links: [
+        { id: "home", label: "Home", href: "/", enabled: true },
+        { id: "about", label: "About", href: "/about", enabled: true },
+        { id: "services", label: "Services", href: "/services", enabled: true },
+        { id: "projects", label: "Projects", href: "/projects", enabled: true },
+        { id: "insights", label: "Insights", href: "/insights", enabled: true },
+        { id: "approach", label: "Our approach", href: "/approach", enabled: true },
+      ],
+      ctaLabel: "Reserve a meeting",
+      ctaHref: "/reservations",
+    },
+    seo: {
+      pages: {
+        home: { title: "Premium Construction Group | Built with intent", description: "Thoughtful construction, clear communication, and enduring quality. Discover Premium Construction Group and start a conversation about your next project." },
+        about: { title: "About Us", description: "Learn about Premium Construction Group Ltd, our purpose, values, and considered approach to construction." },
+        approach: { title: "Our Approach", description: "See how Premium Construction Group brings people, plans, and practical decisions together to create thoughtful places that last." },
+        services: { title: "Our Services", description: "Explore construction delivery, design coordination, and project management from Premium Construction Group Ltd." },
+        projects: { title: "Projects", description: "Explore the commercial, residential, and infrastructure categories represented in the Premium Construction Group portfolio." },
+        insights: { title: "Insights", description: "Read construction perspectives, company news, and ideas from Premium Construction Group." },
+        contact: { title: "Contact Us", description: "Start a conversation with Premium Construction Group about the place you want to build." },
+        reservations: { title: "Reserve a Meeting", description: "Choose a time to talk through your construction plans with Premium Construction Group." },
+      },
+    },
+    footer: {
+      invitationEyebrow: "A good place to start",
+      invitationLead: "Every good build",
+      invitationAccent: "begins with a conversation.",
+      invitationBody: "Tell us what you're planning. We'll take the time to understand what matters.",
+      invitationAction: "Start a project",
+      invitationHref: "/contact",
+      exploreTitle: "Explore",
+      exploreLinks: [
+        { id: "about", label: "About us", href: "/about" },
+        { id: "approach", label: "Our approach", href: "/approach" },
+        { id: "projects", label: "Selected work", href: "/projects" },
+        { id: "insights", label: "Insights", href: "/insights" },
+        { id: "reservations", label: "Reserve a meeting", href: "/reservations" },
+        { id: "services", label: "What we do", href: "/services" },
+      ],
+      capabilitiesTitle: "Capabilities",
+      capabilityLinks: [
+        { id: "construction-delivery", label: "Construction delivery", href: "/services#construction-delivery" },
+        { id: "design-coordination", label: "Design coordination", href: "/services#design-coordination" },
+        { id: "project-management", label: "Project management", href: "/services#project-management" },
+      ],
+      contactTitle: "Have something in mind?",
+      contactBody: "Start with a conversation about your project and where you want it to go.",
+      contactAction: "Talk to our team",
+      contactHref: "/contact",
+      bottomTagline: "Considered construction. Enduring value.",
+      backToTopLabel: "Back to top",
+    },
+  },
+  customPages: [] as CustomSitePage[],
 };
 
-export type SiteContent = typeof defaultSiteContent;
+export type SiteContent = Omit<typeof defaultSiteContent, "customPages"> & { customPages: CustomSitePage[] };
 export type SiteInsight = SiteContent["insights"]["articles"][number];
 export type SiteProjectCategory = SiteContent["projects"]["categories"][number];
 
@@ -245,13 +392,21 @@ function isSafeMedia(value: string) {
   return (value.startsWith("/") && !value.startsWith("//")) || /^https:\/\//i.test(value);
 }
 
+function isValidBookingHours(value: string) {
+  const match = value.match(/^\s*(\d{1,2}):([0-5]\d)\s*[–-]\s*(\d{1,2}):([0-5]\d)\s*$/);
+  if (!match) return false;
+  const start = Number(match[1]) * 60 + Number(match[2]);
+  const end = Number(match[3]) * 60 + Number(match[4]);
+  return start < 24 * 60 && end <= 24 * 60 && end > start;
+}
+
 function normalizeValue(template: unknown, value: unknown, path: string): unknown {
   if (typeof template === "string") {
     if (typeof value !== "string") return template;
     const cleaned = value.slice(0, path.includes("paragraphs") ? 12_000 : 5_000);
     if (path.endsWith("sourceUrl")) return !cleaned || /^https?:\/\//i.test(cleaned) ? cleaned : template;
     if (/(href|url)$/i.test(path)) return isSafeHref(cleaned) ? cleaned : template;
-    if (/(image|src)$/i.test(path) && !isSafeMedia(cleaned)) return template;
+    if (/(image|src|logo)$/i.test(path) && !isSafeMedia(cleaned)) return template;
     if (path.endsWith(".id") || path.endsWith(".slug")) {
       const slug = cleaned.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90);
       return slug || template;
@@ -259,9 +414,16 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
     if (path.endsWith(".tone") && !["dark", "light", "paper"].includes(cleaned)) return template;
     if (path.endsWith(".status") && !["published", "draft"].includes(cleaned)) return template;
     if (path.endsWith(".topic") && !["Planning", "Project delivery", "Long-term value"].includes(cleaned)) return template;
+    if (path.endsWith(".hours") && !isValidBookingHours(cleaned)) return template;
     return cleaned;
   }
   if (typeof template === "boolean") return typeof value === "boolean" ? value : template;
+  if (typeof template === "number") {
+    if (typeof value !== "number" || !Number.isFinite(value)) return template;
+    if (path.endsWith(".duration")) return [30, 45, 60, 90, 120].includes(value) ? value : template;
+    if (path.endsWith(".windowDays")) return Math.min(90, Math.max(1, Math.round(value)));
+    return Math.min(10_000, Math.max(0, value));
+  }
   if (Array.isArray(template)) {
     if (path === "insights.feedUrls") {
       return Array.isArray(value) ? value.slice(0, 12).filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url.length <= 2_000) : [];
@@ -282,5 +444,20 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
 }
 
 export function normalizeSiteContent(value: unknown): SiteContent {
-  return normalizeValue(defaultSiteContent, value, "") as SiteContent;
+  const normalized = normalizeValue(defaultSiteContent, value, "") as SiteContent;
+  const incomingPages = isRecord(value) && Array.isArray(value.customPages) ? value.customPages : [];
+  const reservedSlugs = new Set(["admin", "api", "about", "approach", "services", "projects", "insights", "contact", "reservations"]);
+  const seen = new Set<string>();
+  const seenIds = new Set<string>();
+  const customPages = incomingPages
+    .slice(0, 100)
+    .map((page, index) => normalizeValue(customSitePageTemplate, page, `customPages[${index}]`) as CustomSitePage)
+    .filter((page) => {
+      if (reservedSlugs.has(page.slug) || seen.has(page.slug) || seenIds.has(page.id)) return false;
+      seen.add(page.slug);
+      seenIds.add(page.id);
+      return true;
+    });
+
+  return { ...normalized, customPages };
 }

@@ -11,6 +11,7 @@ export type Reservation = {
   message: string;
   date: string;
   time: string;
+  durationMinutes: number;
   status: ReservationStatus;
   customerEmailSent: boolean;
   adminEmailSent: boolean;

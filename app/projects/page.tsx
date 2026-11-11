@@ -7,12 +7,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
-export const metadata: Metadata = {
-  title: "Projects",
-  description:
-    "Explore the commercial, residential, and infrastructure categories represented in the Premium Construction Group portfolio.",
-};
+export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("projects"); }
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -33,7 +30,7 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 
 export default async function ProjectsPage() {
   await connection();
-  const content = getSiteContent().projects;
+  const content = (await getSiteContent()).projects;
   const { hero, portfolio, categories, belief, closing } = content;
   return (
     <SitePageTheme>

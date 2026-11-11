@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Request could not be verified." }, { status: 403 });
   }
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to upload site media." }, { status: 401 });
   }
 

@@ -36,7 +36,7 @@ function parseDraft(value: string) {
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) return Response.json({ error: "Request could not be verified." }, { status: 403 });
-  if (!hasValidAdminSession(request)) return Response.json({ error: "Sign in to generate article drafts." }, { status: 401 });
+  if (!(await hasValidAdminSession(request))) return Response.json({ error: "Sign in to generate article drafts." }, { status: 401 });
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return Response.json({ error: "AI drafting is not configured. Add OPENAI_API_KEY to the server environment and restart the app." }, { status: 503 });
   if (Number(request.headers.get("content-length") || 0) > 12_000) return Response.json({ error: "The source is too long." }, { status: 413 });

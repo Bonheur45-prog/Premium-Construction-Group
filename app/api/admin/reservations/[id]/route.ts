@@ -16,21 +16,21 @@ export const dynamic = "force-dynamic";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to manage reservations." }, { status: 401 });
   }
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Request could not be verified." }, { status: 403 });
   }
   const { id } = await context.params;
-  const reservation = getReservation(id);
+  const reservation = await getReservation(id);
   if (!reservation) return Response.json({ error: "This reservation could not be found." }, { status: 404 });
 
   const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
   const delivery = reservation.status === "confirmed"
     ? await sendReservationConfirmation(reservation, adminUrl)
     : await sendReservationCancelled(reservation, adminUrl);
-  setReservationEmailStatus(id, delivery.customer, delivery.admin);
+  await setReservationEmailStatus(id, delivery.customer, delivery.admin);
   return Response.json({
     reservation: { ...reservation, customerEmailSent: delivery.customer, adminEmailSent: delivery.admin },
     notifications: delivery,
@@ -38,7 +38,7 @@ export async function POST(request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to manage reservations." }, { status: 401 });
   }
   if (!isSameOriginRequest(request)) {
@@ -46,7 +46,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const previous = getReservation(id);
+  const previous = await getReservation(id);
   if (!previous || previous.status !== "confirmed") {
     return Response.json({ error: "This active reservation could not be found." }, { status: 404 });
   }
@@ -66,12 +66,12 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
   const date = typeof body.date === "string" ? body.date : "";
   const time = typeof body.time === "string" ? body.time : "";
-  if (!isBookableReservationTime(date, time)) {
+  if (!(await isBookableReservationTime(date, time))) {
     return Response.json({ error: "Choose an available weekday time within the booking window." }, { status: 400 });
   }
 
   try {
-    const updated = moveReservation(id, date, time);
+    const updated = await moveReservation(id, date, time);
     if (!updated) return Response.json({ error: "This reservation is no longer active." }, { status: 404 });
     if (updated.date === previous.date && updated.time === previous.time) {
       return Response.json({ reservation: updated, unchanged: true });
@@ -79,7 +79,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
     const delivery = await sendReservationRescheduled(previous, updated, adminUrl);
-    setReservationEmailStatus(id, delivery.customer, delivery.admin);
+    await setReservationEmailStatus(id, delivery.customer, delivery.admin);
     return Response.json({ reservation: { ...updated, customerEmailSent: delivery.customer, adminEmailSent: delivery.admin }, notifications: delivery });
   } catch (error) {
     if (error instanceof ReservationSlotUnavailableError) {
@@ -91,7 +91,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to manage reservations." }, { status: 401 });
   }
   if (!isSameOriginRequest(request)) {
@@ -99,15 +99,15 @@ export async function DELETE(request: Request, context: RouteContext) {
   }
 
   const { id } = await context.params;
-  const active = getReservation(id);
+  const active = await getReservation(id);
   if (!active || active.status !== "confirmed") {
     return Response.json({ error: "This active reservation could not be found." }, { status: 404 });
   }
 
-  const cancelled = cancelReservation(id);
+  const cancelled = await cancelReservation(id);
   if (!cancelled) return Response.json({ error: "This reservation could not be cancelled." }, { status: 409 });
   const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
   const delivery = await sendReservationCancelled(cancelled, adminUrl);
-  setReservationEmailStatus(id, delivery.customer, delivery.admin);
+  await setReservationEmailStatus(id, delivery.customer, delivery.admin);
   return Response.json({ reservation: { ...cancelled, status: "cancelled", customerEmailSent: delivery.customer, adminEmailSent: delivery.admin }, notifications: delivery });
 }

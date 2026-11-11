@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { defaultSiteContent, type SiteContent } from "@/lib/site-content/content";
+import { customSitePageTemplate, defaultSiteContent, type SiteContent } from "@/lib/site-content/content";
 
-type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact";
+type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact" | "reservations" | "siteSettings" | "custom-pages";
 type FeedItem = { title: string; link: string; summary: string; publishedAt: string; image: string };
 type FeedResult = { url: string; title: string; items: FeedItem[]; error?: string };
 
@@ -14,6 +14,9 @@ const pageLabels: { id: SitePage; label: string; hint: string }[] = [
   { id: "projects", label: "Projects", hint: "Portfolio categories and page introduction" },
   { id: "insights", label: "Insights", hint: "Editorial content, RSS sources, and AI drafts" },
   { id: "contact", label: "Contact", hint: "Enquiry and meeting reservation page copy" },
+  { id: "reservations", label: "Reservations", hint: "Booking page copy, opening hours, and meeting availability" },
+  { id: "siteSettings", label: "Site settings", hint: "Brand identity, navigation, footer content, and search titles and descriptions" },
+  { id: "custom-pages", label: "Custom pages", hint: "Create and publish additional website pages" },
 ];
 
 function fieldLabel(value: string) {
@@ -109,7 +112,7 @@ function ContentNode({
   if (typeof value === "string") {
     const lowerLabel = label.toLowerCase();
     const useTextarea = value.length > 110 || /paragraph|intro|summary|description|body|takeaway|image alt|image caption|text|note/i.test(lowerLabel);
-    const isMedia = /(?:^|\.)(?:image|src)$/.test(pathName);
+    const isMedia = /(?:^|\.)(?:image|src|logo)$/.test(pathName);
     const isFeedUrl = pathName.includes("feedUrls");
     return (
       <label className="admin-home-field admin-content-field">
@@ -130,6 +133,12 @@ function ContentNode({
     return <label className="admin-home-switch admin-content-switch"><input type="checkbox" checked={value} onChange={(event) => onChange(event.target.checked)} /><span>{label}</span></label>;
   }
   if (typeof value === "number") {
+    if (pathName.endsWith(".duration")) {
+      return <label className="admin-home-field admin-content-field"><span>{label}</span><select value={value} onChange={(event) => onChange(Number(event.target.value))}><option value={30}>30 minutes</option><option value={45}>45 minutes</option><option value={60}>60 minutes</option><option value={90}>90 minutes</option><option value={120}>120 minutes</option></select></label>;
+    }
+    if (pathName.endsWith(".windowDays")) {
+      return <label className="admin-home-field admin-content-field"><span>{label}</span><input type="number" min={1} max={90} step={1} value={value} onChange={(event) => onChange(Number(event.target.value))} /><small>Choose from 1 to 90 days ahead.</small></label>;
+    }
     return <label className="admin-home-field admin-content-field"><span>{label}</span><input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
   }
   if (Array.isArray(value)) {
@@ -204,6 +213,7 @@ export function AdminPagesEditor() {
   const [content, setContent] = useState<SiteContent | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState("");
   const [selectedPage, setSelectedPage] = useState<SitePage>("about");
+  const [selectedCustomPageId, setSelectedCustomPageId] = useState("");
   const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
@@ -273,6 +283,27 @@ export function AdminPagesEditor() {
     }
   }
 
+  function addCustomPage() {
+    const suffix = Date.now().toString(36);
+    const slug = `new-page-${suffix}`;
+    const page = { ...structuredClone(customSitePageTemplate), id: `page-${suffix}`, slug };
+    updatePath(["customPages"], [...(content?.customPages || []), page]);
+    setSelectedCustomPageId(page.id);
+    setStatusIsError(false);
+    setStatus("New draft created. Add the page content, save it, then publish it when ready.");
+  }
+
+  function removeCustomPage(id: string) {
+    if (!content) return;
+    const page = content.customPages.find((item) => item.id === id);
+    if (!page || !window.confirm(`Remove “${page.title}” from the site? Save your changes to confirm removal.`)) return;
+    const remaining = content.customPages.filter((item) => item.id !== id);
+    updatePath(["customPages"], remaining);
+    setSelectedCustomPageId(remaining[0]?.id || "");
+    setStatusIsError(false);
+    setStatus("Page removed from the draft. Save your changes to publish the removal.");
+  }
+
   async function loadFeeds() {
     const urls = content?.insights.feedUrls.map((url) => url.trim()).filter(Boolean) || [];
     if (!urls.length) {
@@ -321,8 +352,12 @@ export function AdminPagesEditor() {
   }
 
   const isDirty = Boolean(content && JSON.stringify(content) !== savedSnapshot);
-  const pageContent = content?.[selectedPage] as unknown;
-  const pageTemplate = defaultSiteContent[selectedPage] as unknown;
+  const pageContent = selectedPage === "custom-pages"
+    ? content?.customPages.find((page) => page.id === selectedCustomPageId) || content?.customPages[0]
+    : content?.[selectedPage] as unknown;
+  const pageTemplate = selectedPage === "custom-pages"
+    ? customSitePageTemplate
+    : defaultSiteContent[selectedPage] as unknown;
 
   if (checking || !content) {
     return <div className="admin-embedded-status">{checking ? "Loading page content…" : status || "Page content could not be loaded."}</div>;
@@ -332,7 +367,7 @@ export function AdminPagesEditor() {
     <main className="admin-dashboard shell admin-pages-dashboard">
       <div className="admin-home-heading">
         <div><p className="admin-kicker">Site content</p><h1>Page<br /><em>editor.</em></h1></div>
-        <p>Edit page copy, buttons, imagery, and repeatable content here. Shared colors and fonts are in Website. Add article drafts from RSS feeds, then review them before publishing.</p>
+        <p>Edit page copy, buttons, imagery, and repeatable content here. Shared colors and fonts are in Website. Create custom pages and review article drafts before publishing.</p>
       </div>
       <div className="admin-pages-tabs" role="group" aria-label="Choose a page to edit">
         {pageLabels.map((page) => <button type="button" key={page.id} className={selectedPage === page.id ? "is-active" : ""} aria-pressed={selectedPage === page.id} onClick={() => setSelectedPage(page.id)}>{page.label}</button>)}
@@ -377,7 +412,38 @@ export function AdminPagesEditor() {
         </section>
       )}
 
-      <div className="admin-pages-fields">
+      {selectedPage === "custom-pages" && (
+        <section className="admin-custom-pages">
+          <div className="admin-custom-pages__heading">
+            <div><p className="admin-kicker">Flexible page builder</p><h2>Your pages</h2><p>Create a page as a draft, edit its sections, then publish it at its own URL.</p></div>
+            <button className="button button--dark" type="button" onClick={addCustomPage}>+ Create page</button>
+          </div>
+          {content.customPages.length > 0 ? (
+            <div className="admin-custom-pages__list" role="group" aria-label="Your custom pages">
+              {content.customPages.map((page) => (
+                <button type="button" key={page.id} className={page.id === (selectedCustomPageId || content.customPages[0]?.id) ? "is-active" : ""} aria-pressed={page.id === (selectedCustomPageId || content.customPages[0]?.id)} onClick={() => setSelectedCustomPageId(page.id)}>
+                  <span>{page.title || "Untitled page"}</span><small>/{page.slug} · {page.status}</small>
+                </button>
+              ))}
+            </div>
+          ) : <div className="admin-custom-pages__empty"><h3>No custom pages yet.</h3><p>Create one to add a new page to the website.</p></div>}
+          {pageContent !== null && pageContent !== undefined && (
+            <div className="admin-custom-pages__editor">
+              <div className="admin-custom-pages__editor-heading"><span>Editing /{(pageContent as SiteContent["customPages"][number]).slug}</span><button className="is-destructive" type="button" onClick={() => removeCustomPage((pageContent as SiteContent["customPages"][number]).id)}>Remove page</button></div>
+              <ContentNode
+                label="Page content"
+                value={pageContent}
+                template={customSitePageTemplate}
+                path={["customPages", String(content.customPages.findIndex((page) => page.id === (pageContent as SiteContent["customPages"][number]).id))]}
+                onChange={(nextValue) => updatePath(["customPages"], content.customPages.map((page) => page.id === (pageContent as SiteContent["customPages"][number]).id ? nextValue : page))}
+              />
+              <p className="admin-custom-pages__hint">Use a short, unique URL slug without spaces. Draft pages are hidden from visitors.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {selectedPage !== "custom-pages" && <div className="admin-pages-fields">
         {isRecord(pageContent) && Object.entries(pageContent).map(([key, value]) => {
           if (selectedPage === "insights" && key === "feedUrls") return null;
           return (
@@ -393,7 +459,7 @@ export function AdminPagesEditor() {
             />
           );
         })}
-      </div>
+      </div>}
     </main>
   );
 }

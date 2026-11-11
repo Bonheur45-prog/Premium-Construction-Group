@@ -1,17 +1,21 @@
 import "server-only";
 
 import { adminConfigurationReady } from "@/lib/reservations/auth";
+import { getReservationSettings } from "@/lib/reservations/settings";
 import { formatReservationDateTime } from "@/lib/reservations/availability";
 import type { Reservation } from "@/lib/reservations/types";
 
 type Delivery = { customer: boolean; admin: boolean };
 
-export function reservationSystemConfigured() {
+export async function reservationSystemConfigured() {
+  const settings = await getReservationSettings();
+  const adminReady = await adminConfigurationReady();
   return Boolean(
+    settings.enabled &&
     process.env.RESEND_API_KEY &&
       process.env.RESERVATION_FROM_EMAIL &&
       process.env.RESERVATION_ADMIN_EMAIL &&
-      adminConfigurationReady(),
+      adminReady,
   );
 }
 

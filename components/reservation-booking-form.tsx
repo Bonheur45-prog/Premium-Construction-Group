@@ -15,10 +15,10 @@ function getDateInSouthAfrica(date: Date) {
   }).format(date);
 }
 
-function getBookingMaxDate() {
+function getBookingMaxDate(windowDays: number) {
   const today = getDateInSouthAfrica(new Date());
   const [year, month, day] = today.split("-").map(Number);
-  const lastDate = new Date(Date.UTC(year, month - 1, day + 90));
+  const lastDate = new Date(Date.UTC(year, month - 1, day + windowDays));
   return [
     lastDate.getUTCFullYear(),
     String(lastDate.getUTCMonth() + 1).padStart(2, "0"),
@@ -40,7 +40,21 @@ function formatBookingDate(date: string, time: string) {
   }).format(scheduled);
 }
 
-export function ReservationBookingForm({ enabled }: { enabled: boolean }) {
+export function ReservationBookingForm({
+  enabled,
+  windowDays = 90,
+  durationMinutes = 60,
+  daysLabel = "Weekdays",
+  hoursLabel = "09:00–17:00",
+  timezoneLabel = "SAST",
+}: {
+  enabled: boolean;
+  windowDays?: number;
+  durationMinutes?: number;
+  daysLabel?: string;
+  hoursLabel?: string;
+  timezoneLabel?: string;
+}) {
   const [enquiryType, setEnquiryType] = useState<"personal" | "company">("personal");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -153,7 +167,7 @@ export function ReservationBookingForm({ enabled }: { enabled: boolean }) {
   }
 
   const minDate = getDateInSouthAfrica(new Date());
-  const maxDate = getBookingMaxDate();
+  const maxDate = getBookingMaxDate(windowDays);
 
   if (!enabled) {
     return (
@@ -239,12 +253,12 @@ export function ReservationBookingForm({ enabled }: { enabled: boolean }) {
 
       {error && <p className="booking-form__message booking-form__message--error" role="alert">{error}</p>}
       <div className="booking-form__submit-row">
-        <p>60-minute meetings · Weekdays · South Africa time</p>
+        <p>{durationMinutes}-minute meetings · {daysLabel} · South Africa time</p>
         <button className="button button--dark" type="submit" disabled={submitting || loadingTimes}>
           {submitting ? "Reserving…" : "Reserve a meeting"} <span aria-hidden="true">↗</span>
         </button>
       </div>
-      <p className="booking-form__timezone">Available weekdays from 09:00 to 17:00 SAST. Your confirmation email will include the reservation time.</p>
+      <p className="booking-form__timezone">Available {daysLabel.toLowerCase()} from {hoursLabel} {timezoneLabel}. Your confirmation email will include the reservation time.</p>
     </form>
   );
 }

@@ -1,19 +1,29 @@
 import { getBookedTimes } from "@/lib/reservations/store";
+import { getReservationSettings } from "@/lib/reservations/settings";
 
 export const RESERVATION_TIME_ZONE = "Africa/Johannesburg";
 export const RESERVATION_WINDOW_DAYS = 90;
 export const CONSULTATION_DURATION_MINUTES = 60;
 
-export const RESERVATION_TIMES = [
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-];
+function toTimeLabel(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
+function timesFromSettings(settings: Awaited<ReturnType<typeof getReservationSettings>>) {
+  const times: string[] = [];
+  for (
+    let time = settings.startMinutes;
+    time + settings.durationMinutes <= settings.endMinutes;
+    time += settings.durationMinutes
+  ) {
+    times.push(toTimeLabel(time));
+  }
+  return times;
+}
+
+export async function getReservationTimes() {
+  return timesFromSettings(await getReservationSettings());
+}
 
 function datePartsInTimeZone(date: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -33,10 +43,10 @@ function timePartsInTimeZone(date: Date) {
   }).format(date);
 }
 
-export function getReservationDateBounds(now = new Date()) {
+function dateBounds(windowDays: number, now = new Date()) {
   const today = datePartsInTimeZone(now);
   const [year, month, day] = today.split("-").map(Number);
-  const lastDate = new Date(Date.UTC(year, month - 1, day + RESERVATION_WINDOW_DAYS));
+  const lastDate = new Date(Date.UTC(year, month - 1, day + windowDays));
   const max = [
     lastDate.getUTCFullYear(),
     String(lastDate.getUTCMonth() + 1).padStart(2, "0"),
@@ -46,27 +56,41 @@ export function getReservationDateBounds(now = new Date()) {
   return { min: today, max };
 }
 
+export async function getReservationDateBounds(now = new Date()) {
+  return dateBounds((await getReservationSettings()).windowDays, now);
+}
+
 export function isValidReservationDate(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
   const parsed = new Date(`${date}T12:00:00Z`);
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === date;
 }
 
-export function isBookableReservationTime(date: string, time: string, now = new Date()) {
-  if (!isValidReservationDate(date) || !RESERVATION_TIMES.includes(time)) return false;
+export async function isBookableReservationTime(date: string, time: string, now = new Date()) {
+  const settings = await getReservationSettings();
+  if (!settings.enabled || !isValidReservationDate(date) || !timesFromSettings(settings).includes(time)) return false;
   const day = new Date(`${date}T12:00:00Z`).getUTCDay();
-  if (day === 0 || day === 6) return false;
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+  if (!settings.weekdays[dayNames[day]]) return false;
 
-  const { min, max } = getReservationDateBounds(now);
+  const { min, max } = dateBounds(settings.windowDays, now);
   if (date < min || date > max) return false;
   if (date === min && time <= timePartsInTimeZone(now)) return false;
   return true;
 }
 
-export function getAvailableReservationTimes(date: string, excludeReservationId?: string) {
+export async function getAvailableReservationTimes(date: string, excludeReservationId?: string) {
   if (!isValidReservationDate(date)) return [];
-  const booked = new Set(getBookedTimes(date, excludeReservationId));
-  return RESERVATION_TIMES.filter((time) => isBookableReservationTime(date, time) && !booked.has(time));
+  const settings = await getReservationSettings();
+  if (!settings.enabled) return [];
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay();
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+  if (!settings.weekdays[dayNames[day]]) return [];
+  const { min, max } = dateBounds(settings.windowDays);
+  if (date < min || date > max) return [];
+  const lastAllowedTimeToday = date === min ? timePartsInTimeZone(new Date()) : "";
+  const booked = new Set(await getBookedTimes(date, excludeReservationId));
+  return timesFromSettings(settings).filter((time) => time > lastAllowedTimeToday && !booked.has(time));
 }
 
 export function formatReservationDateTime(date: string, time: string) {

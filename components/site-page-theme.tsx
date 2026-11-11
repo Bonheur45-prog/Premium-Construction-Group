@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { getHomePageContent } from "@/lib/homepage/store";
 
-export function SitePageTheme({ children }: { children: ReactNode }) {
-  const { colors, bodyFont, headingFont } = getHomePageContent().theme;
+export async function SitePageTheme({ children }: { children: ReactNode }) {
+  const { colors, bodyFont, headingFont } = (await getHomePageContent()).theme;
   const style = {
     "--ink": colors.ink,
     "--ink-soft": colors.inkSoft,

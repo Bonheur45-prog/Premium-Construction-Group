@@ -3,6 +3,7 @@ import { reservationSystemConfigured, sendReservationConfirmation } from "@/lib/
 import { createReservation, hasReachedDailyReservationLimit, ReservationSlotUnavailableError, setReservationEmailStatus } from "@/lib/reservations/store";
 import { PROJECT_TYPES, type ReservationInput } from "@/lib/reservations/types";
 import { isSameOriginRequest } from "@/lib/reservations/auth";
+import { getReservationSettings } from "@/lib/reservations/settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Request could not be verified. Refresh the page and try again." }, { status: 403 });
   }
-  if (!reservationSystemConfigured()) {
+  if (!(await reservationSystemConfigured())) {
     return Response.json(
       { error: "Online reservations are not available yet. Please use the project enquiry form and our team will be in touch." },
       { status: 503 },
@@ -65,23 +66,23 @@ export async function POST(request: Request) {
     (input.enquiryType === "company" && input.company.length < 2) ||
     !PROJECT_TYPES.includes(input.projectType as (typeof PROJECT_TYPES)[number]) ||
     input.message.length > 1800 ||
-    !isBookableReservationTime(input.date, input.time)
+    !(await isBookableReservationTime(input.date, input.time))
   ) {
     return Response.json({ error: "Check your details and choose an available weekday time." }, { status: 400 });
   }
 
   try {
-    if (hasReachedDailyReservationLimit(input.email)) {
+    if (await hasReachedDailyReservationLimit(input.email)) {
       return Response.json({ error: "This email address has reached the daily reservation limit. Please contact our team for help." }, { status: 429 });
     }
-    if (!getAvailableReservationTimes(input.date).includes(input.time)) {
+    if (!(await getAvailableReservationTimes(input.date)).includes(input.time)) {
       return Response.json({ error: "That time is no longer available. Choose another time." }, { status: 409 });
     }
 
-    const reservation = createReservation(input);
+    const reservation = await createReservation(input, (await getReservationSettings()).durationMinutes);
     const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
     const delivery = await sendReservationConfirmation(reservation, adminUrl);
-    setReservationEmailStatus(reservation.id, delivery.customer, delivery.admin);
+    await setReservationEmailStatus(reservation.id, delivery.customer, delivery.admin);
 
     return Response.json(
       {

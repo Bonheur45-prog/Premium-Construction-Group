@@ -14,6 +14,7 @@ type Reservation = {
   message: string;
   date: string;
   time: string;
+  durationMinutes: number;
   status: "confirmed" | "cancelled";
   customerEmailSent: boolean;
   adminEmailSent: boolean;
@@ -305,7 +306,7 @@ export function AdminReservationsConsole({ embedded = false }: { embedded?: bool
                 <div className="admin-reservation__date">
                   <span>{reservation.date}</span>
                   <strong>{reservation.time}</strong>
-                  <small>{reservation.status === "confirmed" ? "SAST · 60 min" : "Cancelled"}</small>
+                  <small>{reservation.status === "confirmed" ? `SAST · ${reservation.durationMinutes} min` : "Cancelled"}</small>
                 </div>
                 <div className="admin-reservation__body">
                   <div className="admin-reservation__topline">

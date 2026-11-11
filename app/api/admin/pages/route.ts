@@ -5,15 +5,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to edit site pages." }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
-  return Response.json({ content: getSiteContent(), aiConfigured: Boolean(process.env.OPENAI_API_KEY) }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ content: await getSiteContent(), aiConfigured: Boolean(process.env.OPENAI_API_KEY) }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request: Request) {
   if (!isSameOriginRequest(request)) return Response.json({ error: "Request could not be verified." }, { status: 403 });
-  if (!hasValidAdminSession(request)) return Response.json({ error: "Sign in to edit site pages." }, { status: 401 });
+  if (!(await hasValidAdminSession(request))) return Response.json({ error: "Sign in to edit site pages." }, { status: 401 });
   const declaredSize = Number(request.headers.get("content-length") || 0);
   if (declaredSize > 1_000_000) return Response.json({ error: "Site content is too large to save." }, { status: 413 });
 
@@ -29,7 +29,7 @@ export async function PUT(request: Request) {
     return Response.json({ error: "Site content was not valid." }, { status: 400 });
   }
   try {
-    return Response.json({ content: saveSiteContent((body as { content: unknown }).content) }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ content: await saveSiteContent((body as { content: unknown }).content) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "Site content could not be saved." }, { status: 500 });
   }

@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) return Response.json({ error: "Request could not be verified." }, { status: 403 });
-  if (!hasValidAdminSession(request)) return Response.json({ error: "Sign in to import feeds." }, { status: 401 });
+  if (!(await hasValidAdminSession(request))) return Response.json({ error: "Sign in to import feeds." }, { status: 401 });
   if (Number(request.headers.get("content-length") || 0) > 30_000) return Response.json({ error: "Too many feed URLs." }, { status: 413 });
 
   let urls: unknown;

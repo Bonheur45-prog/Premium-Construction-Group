@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -6,6 +7,13 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { getHomePageContent } from "@/lib/homepage/store";
+import { getSiteContent } from "@/lib/site-content/store";
+
+export async function generateMetadata(): Promise<Metadata> {
+  await connection();
+  const home = (await getSiteContent()).siteSettings.seo.pages.home;
+  return { title: { absolute: home.title }, description: home.description };
+}
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -32,7 +40,7 @@ function CapabilityIcon({ name }: { name: string }) {
 
 export default async function HomePage() {
   await connection();
-  const home = getHomePageContent();
+  const home = await getHomePageContent();
   const colors = home.theme.colors;
   const visibleSectionTargets = [
     home.intro.enabled ? "#about" : "",

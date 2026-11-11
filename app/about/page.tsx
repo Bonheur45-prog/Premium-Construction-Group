@@ -6,12 +6,9 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
-export const metadata: Metadata = {
-  title: "About Us",
-  description:
-    "Learn about Premium Construction Group Ltd, our purpose, values, and considered approach to construction.",
-};
+export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("about"); }
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -32,7 +29,7 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 
 export default async function AboutPage() {
   await connection();
-  const content = getSiteContent().about;
+  const content = (await getSiteContent()).about;
   const { hero, story, purpose, values, strengths, closing } = content;
   return (
     <SitePageTheme>

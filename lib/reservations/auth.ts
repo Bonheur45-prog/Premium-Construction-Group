@@ -6,10 +6,10 @@ import { getCmsUserById, hasCmsUsers, normalizeUsername, type CmsUserSummary } f
 const SESSION_DURATION_SECONDS = 12 * 60 * 60;
 export const ADMIN_SESSION_COOKIE = "pcg_admin_session";
 
-export function adminConfigurationReady() {
+export async function adminConfigurationReady() {
   const hasBootstrapCredentials = (process.env.ADMIN_DASHBOARD_PASSWORD?.length || 0) >= 12 &&
     Boolean(normalizeUsername(process.env.ADMIN_DASHBOARD_USERNAME || "admin"));
-  return (process.env.RESERVATION_SESSION_SECRET?.length || 0) >= 32 && (hasCmsUsers() || hasBootstrapCredentials);
+  return (process.env.RESERVATION_SESSION_SECRET?.length || 0) >= 32 && (await hasCmsUsers() || hasBootstrapCredentials);
 }
 
 function sign(value: string) {
@@ -24,7 +24,7 @@ export function createAdminSessionToken(userId: string) {
   return `${payload}.${sign(payload)}`;
 }
 
-function sessionUserFromToken(token: string | undefined): CmsUserSummary | null {
+async function sessionUserFromToken(token: string | undefined): Promise<CmsUserSummary | null> {
   if (!token || (process.env.RESERVATION_SESSION_SECRET?.length || 0) < 32) return null;
   const [payload, signature, extra] = token.split(".");
   if (!payload || !signature || extra) return null;
@@ -38,22 +38,22 @@ function sessionUserFromToken(token: string | undefined): CmsUserSummary | null 
     if (!data || typeof data !== "object" || !("userId" in data) || !("expiresAt" in data)) return null;
     const session = data as { userId: unknown; expiresAt: unknown };
     if (typeof session.userId !== "string" || typeof session.expiresAt !== "number" || session.expiresAt <= Math.floor(Date.now() / 1000)) return null;
-    return getCmsUserById(session.userId);
+    return await getCmsUserById(session.userId);
   } catch {
     return null;
   }
 }
 
-export function getAdminSessionUserFromRequest(request: Request) {
+export async function getAdminSessionUserFromRequest(request: Request) {
   return sessionUserFromToken(getAdminSessionTokenFromRequest(request));
 }
 
-export function isAdminSession(request: Request) {
-  return getAdminSessionUserFromRequest(request)?.role === "admin";
+export async function isAdminSession(request: Request) {
+  return (await getAdminSessionUserFromRequest(request))?.role === "admin";
 }
 
-export function verifyAdminSessionToken(token: string | undefined) {
-  return sessionUserFromToken(token) !== null;
+export async function verifyAdminSessionToken(token: string | undefined) {
+  return (await sessionUserFromToken(token)) !== null;
 }
 
 export function getAdminSessionTokenFromRequest(request: Request) {
@@ -63,8 +63,8 @@ export function getAdminSessionTokenFromRequest(request: Request) {
   return value ? value.slice(prefix.length) : undefined;
 }
 
-export function hasValidAdminSession(request: Request) {
-  return getAdminSessionUserFromRequest(request) !== null;
+export async function hasValidAdminSession(request: Request) {
+  return (await getAdminSessionUserFromRequest(request)) !== null;
 }
 
 export function isSameOriginRequest(request: Request) {

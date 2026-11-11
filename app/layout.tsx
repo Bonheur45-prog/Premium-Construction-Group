@@ -1,22 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
+import { getSiteContent } from "@/lib/site-content/store";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Premium Construction Group | Built with intent",
-    template: "%s | Premium Construction Group",
-  },
-  description:
-    "Thoughtful construction, clear communication, and enduring quality. Discover Premium Construction Group and start a conversation about your next project.",
-  applicationName: "Premium Construction Group",
-  openGraph: {
-    type: "website",
-    title: "Premium Construction Group | Built with intent",
-    description:
-      "Thoughtful construction, clear communication, and enduring quality.",
-    siteName: "Premium Construction Group",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  await connection();
+  const { siteSettings } = await getSiteContent();
+  const home = siteSettings.seo.pages.home;
+  const siteName = `${siteSettings.brand.primaryName} ${siteSettings.brand.secondaryName}`;
+  return {
+    title: { default: home.title, template: `%s | ${siteName}` },
+    description: home.description,
+    applicationName: siteName,
+    openGraph: { type: "website", title: home.title, description: home.description, siteName },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f7f6f2",

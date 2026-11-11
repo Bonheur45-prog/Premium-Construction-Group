@@ -4,17 +4,17 @@ import { hasValidAdminSession, isAdminSession, isSameOriginRequest } from "@/lib
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function requireManager(request: Request) {
-  if (!hasValidAdminSession(request)) return Response.json({ error: "Sign in to manage CMS users." }, { status: 401 });
-  if (!isAdminSession(request)) return Response.json({ error: "Only an administrator can manage CMS users." }, { status: 403 });
+async function requireManager(request: Request) {
+  if (!(await hasValidAdminSession(request))) return Response.json({ error: "Sign in to manage CMS users." }, { status: 401 });
+  if (!(await isAdminSession(request))) return Response.json({ error: "Only an administrator can manage CMS users." }, { status: 403 });
   return null;
 }
 
 export async function GET(request: Request) {
-  const denied = requireManager(request);
+  const denied = await requireManager(request);
   if (denied) return denied;
   try {
-    return Response.json({ users: listCmsUsers() }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json({ users: await listCmsUsers() }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "The CMS account store could not be read." }, { status: 500 });
   }
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) return Response.json({ error: "Request could not be verified." }, { status: 403 });
-  const denied = requireManager(request);
+  const denied = await requireManager(request);
   if (denied) return denied;
   if (Number(request.headers.get("content-length") || 0) > 6_000) return Response.json({ error: "Request is too large." }, { status: 413 });
 
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   if (role !== "admin" && role !== "editor") return Response.json({ error: "Choose a valid account role." }, { status: 400 });
 
   try {
-    const user = createCmsUser(data.username, data.password, role as CmsUserRole);
+    const user = await createCmsUser(data.username, data.password, role as CmsUserRole);
     return Response.json({ user }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (reason) {
     const message = reason instanceof Error ? reason.message : "The account could not be created.";

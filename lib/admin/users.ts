@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { pgQuery, postgresEnabled, runOnceMigration } from "@/lib/db/postgres";
 
 export type CmsUserRole = "admin" | "editor";
 type StoredCmsUser = {
@@ -27,8 +28,8 @@ export function normalizeUsername(value: string) {
 
 function readUsers(): StoredCmsUser[] {
   const path = usersPath();
-  if (!existsSync(path)) return [];
-  const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+  if (!existsSync(/*turbopackIgnore: true*/ path)) return [];
+  const parsed: unknown = JSON.parse(readFileSync(/*turbopackIgnore: true*/ path, "utf8"));
   if (!Array.isArray(parsed)) throw new Error("The CMS account file is invalid.");
   return parsed.filter((item): item is StoredCmsUser => Boolean(item) && typeof item === "object" &&
     typeof item.id === "string" && typeof item.username === "string" &&
@@ -52,23 +53,47 @@ function publicUser(user: StoredCmsUser): CmsUserSummary {
   return { id: user.id, username: user.username, role: user.role, createdAt: user.createdAt };
 }
 
-export function listCmsUsers(): CmsUserSummary[] {
-  return readUsers().map(publicUser).sort((a, b) => a.username.localeCompare(b.username));
+function fromPgRow(row: Record<string, unknown>): StoredCmsUser {
+  return {
+    id: String(row.id), username: String(row.username), role: row.role === "admin" ? "admin" : "editor",
+    salt: String(row.salt), passwordHash: String(row.password_hash),
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
+  };
 }
 
-export function hasCmsUsers() {
-  try { return readUsers().length > 0; } catch { return false; }
+async function readPgUsers() {
+  await runOnceMigration("legacy_admin_users_v1", async (client) => {
+    for (const user of readUsers()) {
+      await client.query(
+        "INSERT INTO pcg_admin_users (id, username, role, salt, password_hash, created_at) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (id) DO NOTHING",
+        [user.id, user.username, user.role, user.salt, user.passwordHash, user.createdAt],
+      );
+    }
+  });
+  const result = await pgQuery("SELECT id, username, role, salt, password_hash, created_at FROM pcg_admin_users");
+  return result.rows.map(fromPgRow);
 }
 
-export function getCmsUserById(id: string) {
-  const user = readUsers().find((candidate) => candidate.id === id);
+export async function listCmsUsers(): Promise<CmsUserSummary[]> {
+  const users = postgresEnabled() ? await readPgUsers() : readUsers();
+  return users.map(publicUser).sort((a, b) => a.username.localeCompare(b.username));
+}
+
+export async function hasCmsUsers() {
+  try { return (postgresEnabled() ? await readPgUsers() : readUsers()).length > 0; } catch { return false; }
+}
+
+export async function getCmsUserById(id: string) {
+  const users = postgresEnabled() ? await readPgUsers() : readUsers();
+  const user = users.find((candidate) => candidate.id === id);
   return user ? publicUser(user) : null;
 }
 
-export function findCmsUserByUsername(username: string) {
+export async function findCmsUserByUsername(username: string) {
   const normalized = normalizeUsername(username);
   if (!normalized) return null;
-  return readUsers().find((user) => user.username === normalized) || null;
+  const users = postgresEnabled() ? await readPgUsers() : readUsers();
+  return users.find((user) => user.username === normalized) || null;
 }
 
 export function verifyCmsPassword(user: StoredCmsUser, password: string) {
@@ -77,8 +102,8 @@ export function verifyCmsPassword(user: StoredCmsUser, password: string) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-export function bootstrapCmsAdmin() {
-  const users = readUsers();
+export async function bootstrapCmsAdmin() {
+  const users = postgresEnabled() ? await readPgUsers() : readUsers();
   if (users.length) return null;
 
   const password = process.env.ADMIN_DASHBOARD_PASSWORD || "";
@@ -94,17 +119,24 @@ export function bootstrapCmsAdmin() {
     createdAt: new Date().toISOString(),
   };
   user.passwordHash = passwordDigest(password, user.salt);
-  saveUsers([user]);
+  if (postgresEnabled()) {
+    await pgQuery(
+      "INSERT INTO pcg_admin_users (id, username, role, salt, password_hash, created_at) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (username) DO NOTHING",
+      [user.id, user.username, user.role, user.salt, user.passwordHash, user.createdAt],
+    );
+    return (await findCmsUserByUsername(user.username))?.id === user.id ? user : null;
+  }
+  saveUsers([...users, user]);
   return user;
 }
 
-export function createCmsUser(usernameValue: string, password: string, role: CmsUserRole) {
+export async function createCmsUser(usernameValue: string, password: string, role: CmsUserRole) {
   const username = normalizeUsername(usernameValue);
   if (!username) throw new Error("Use 3–32 characters: letters, numbers, dots, dashes, or underscores.");
   if (password.length < 12 || password.length > 128) throw new Error("Passwords must be 12–128 characters long.");
   if (role !== "admin" && role !== "editor") throw new Error("Choose a valid account role.");
 
-  const users = readUsers();
+  const users = postgresEnabled() ? await readPgUsers() : readUsers();
   if (users.some((user) => user.username === username)) throw new Error("That username is already in use.");
   const user: StoredCmsUser = {
     id: randomUUID(),
@@ -115,6 +147,18 @@ export function createCmsUser(usernameValue: string, password: string, role: Cms
     createdAt: new Date().toISOString(),
   };
   user.passwordHash = passwordDigest(password, user.salt);
-  saveUsers([...users, user]);
+  if (postgresEnabled()) {
+    try {
+      await pgQuery(
+        "INSERT INTO pcg_admin_users (id, username, role, salt, password_hash, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+        [user.id, user.username, user.role, user.salt, user.passwordHash, user.createdAt],
+      );
+    } catch (error) {
+      if (error && typeof error === "object" && "code" in error && error.code === "23505") throw new Error("That username is already in use.");
+      throw error;
+    }
+  } else {
+    saveUsers([...users, user]);
+  }
   return publicUser(user);
 }

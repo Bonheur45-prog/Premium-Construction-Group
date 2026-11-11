@@ -4,17 +4,17 @@ import { getHomePageContent, saveHomePageContent } from "@/lib/homepage/store";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to edit the homepage." }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
-  return Response.json({ content: getHomePageContent() }, { headers: { "Cache-Control": "no-store" } });
+  return Response.json({ content: await getHomePageContent() }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request: Request) {
   if (!isSameOriginRequest(request)) {
     return Response.json({ error: "Request could not be verified." }, { status: 403 });
   }
-  if (!hasValidAdminSession(request)) {
+  if (!(await hasValidAdminSession(request))) {
     return Response.json({ error: "Sign in to edit the homepage." }, { status: 401 });
   }
 
@@ -48,7 +48,7 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const content = saveHomePageContent(contentValue);
+    const content = await saveHomePageContent(contentValue);
     return Response.json({ content }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "Homepage changes could not be saved." }, { status: 500 });

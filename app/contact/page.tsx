@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -6,19 +7,20 @@ import { SitePageTheme } from "@/components/site-page-theme";
 import { ContactEnquiryForm } from "@/components/contact-enquiry-form";
 import { ReservationBookingForm } from "@/components/reservation-booking-form";
 import { reservationSystemConfigured } from "@/lib/reservations/email";
+import { getReservationSettings } from "@/lib/reservations/settings";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
-export const metadata: Metadata = {
-  title: "Contact Us",
-  description:
-    "Start a conversation with Premium Construction Group about the place you want to build.",
-};
+export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("contact"); }
 
 export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
   await connection();
-  const { hero, enquiry, next, reservation } = getSiteContent().contact;
+  const siteContent = await getSiteContent();
+  const { hero, enquiry, next, reservation } = siteContent.contact;
+  const bookingSettings = await getReservationSettings();
+  const reservationsEnabled = await reservationSystemConfigured();
   return (
     <SitePageTheme>
       <SiteHeader />
@@ -28,9 +30,9 @@ export default async function ContactPage() {
             <p className="eyebrow"><span /> {hero.eyebrow}</p>
             <h1 id="contact-title">{hero.title}<br /><em>{hero.accent}</em></h1>
             <p className="contact-hero__intro">{hero.intro}</p>
-            <a className="button button--primary contact-hero__reserve" href="#reserve">
+            <Link className="button button--primary contact-hero__reserve" href={hero.reserveHref}>
               {hero.reserveLabel} <span aria-hidden="true">↓</span>
-            </a>
+            </Link>
           </div>
           <div className="contact-hero__aside" aria-hidden="true">
             <span className="contact-hero__aside-index">PCG / CONTACT</span>
@@ -95,7 +97,14 @@ export default async function ContactPage() {
                 <div><span className="booking-card__step">{reservation.step}</span><h3>{reservation.cardTitle}</h3></div>
                 <span className="booking-card__symbol" aria-hidden="true">↗</span>
               </div>
-              <ReservationBookingForm enabled={reservationSystemConfigured()} />
+              <ReservationBookingForm
+                enabled={reservationsEnabled}
+                windowDays={bookingSettings.windowDays}
+                durationMinutes={bookingSettings.durationMinutes}
+                daysLabel={bookingSettings.daysLabel}
+                hoursLabel={bookingSettings.hoursLabel}
+                timezoneLabel={siteContent.reservations.booking.timezone}
+              />
             </div>
           </div>
         </section>

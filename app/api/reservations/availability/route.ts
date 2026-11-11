@@ -1,5 +1,6 @@
-import { getAvailableReservationTimes, getReservationDateBounds, CONSULTATION_DURATION_MINUTES, RESERVATION_TIME_ZONE } from "@/lib/reservations/availability";
+import { getAvailableReservationTimes, getReservationDateBounds, RESERVATION_TIME_ZONE } from "@/lib/reservations/availability";
 import { isValidReservationDate } from "@/lib/reservations/availability";
+import { getReservationSettings } from "@/lib/reservations/settings";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,10 +14,10 @@ export async function GET(request: Request) {
   return Response.json(
     {
       date,
-      availableTimes: getAvailableReservationTimes(date),
-      ...getReservationDateBounds(),
+      availableTimes: await getAvailableReservationTimes(date),
+      ...await getReservationDateBounds(),
       timeZone: RESERVATION_TIME_ZONE,
-      durationMinutes: CONSULTATION_DURATION_MINUTES,
+      durationMinutes: (await getReservationSettings()).durationMinutes,
     },
     { headers: { "Cache-Control": "no-store" } },
   );
