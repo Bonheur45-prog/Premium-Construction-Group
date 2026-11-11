@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const companyLinks = [
   { label: "About us", href: "/about" },
-  { label: "Our approach", href: "/#approach" },
+  { label: "Our approach", href: "/approach" },
   { label: "Selected work", href: "/projects" },
   { label: "Insights", href: "/insights" },
   { label: "What we do", href: "/services" },

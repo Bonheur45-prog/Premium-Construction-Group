@@ -111,7 +111,7 @@ export const defaultHomePageContent: HomePageContent = {
     headline: { lead: "Good work starts", accent: "with understanding." },
     paragraph:
       "Every great space begins with a clear idea of what it needs to become. We bring care, craft, and considered thinking to the process of bringing that idea to life.",
-    action: { label: "Get to know our approach", href: "#approach" },
+    action: { label: "Get to know our approach", href: "/approach" },
     image: {
       src: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=2000&q=85",
       alt: "Architectural forms reveal the balance of light, material, and space",

@@ -11,7 +11,7 @@ const links = [
   { label: "Services", href: "/services" },
   { label: "Projects", href: "/projects" },
   { label: "Insights", href: "/insights" },
-  { label: "Our approach", href: "/#approach" },
+  { label: "Our approach", href: "/approach" },
 ];
 
 export function SiteHeader() {

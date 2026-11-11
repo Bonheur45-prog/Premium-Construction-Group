@@ -53,7 +53,7 @@ export const homeHeroSlides: HomeHeroSlide[] = [
     intro:
       "A clear process, capable partners, and care in every detail make better builds possible.",
     primaryAction: { label: "Talk about your project", href: "/contact" },
-    secondaryAction: { label: "Our approach", href: "#approach" },
+    secondaryAction: { label: "Our approach", href: "/approach" },
     media: {
       type: "image",
       src: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=2400&q=90",

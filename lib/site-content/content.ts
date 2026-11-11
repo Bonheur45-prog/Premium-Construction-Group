@@ -64,6 +64,58 @@ export const defaultSiteContent = {
     },
     closing: { eyebrow: "The next step is yours", title: "Let's build", accent: "something that matters.", body: "Tell us what you're looking to build. We'll start with a conversation.", action: "Start a conversation", href: "/contact" },
   },
+  approach: {
+    hero: {
+      eyebrow: "Our approach",
+      title: "A better build",
+      accent: "begins with trust.",
+      intro: "Good collaboration makes room for big ideas and the small decisions that bring them to life. We listen, plan with intention, and deliver with care.",
+      primaryLabel: "Let's talk about your project",
+      primaryHref: "/contact",
+      secondaryLabel: "See how we work",
+      secondaryHref: "#approach-process",
+      image: {
+        src: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=2000&q=85",
+        alt: "Architectural forms reveal the balance of light, material, and space",
+        label: "Considered in every detail",
+        number: "PCG / 01",
+      },
+      noteLabel: "What guides the work",
+      noteText: "People first",
+      indexLead: "A considered process",
+      indexAccent: "Built around people",
+    },
+    process: {
+      kicker: "How we work",
+      title: "From first questions",
+      accent: "to lasting places.",
+      intro: "Every project is different. A considered process helps people stay aligned as the work takes shape.",
+      steps: [
+        { number: "01", title: "Listen first", text: "Understand the brief, the people, and the purpose behind each project." },
+        { number: "02", title: "Plan with intention", text: "Make thoughtful choices early, so the whole team can move forward with clarity." },
+        { number: "03", title: "Deliver with care", text: "Bring the work together with focus, communication, and respect for every detail." },
+      ],
+    },
+    principles: {
+      kicker: "Our principles",
+      title: "Principles that shape",
+      accent: "the work.",
+      intro: "Our objectives are to keep the process clear, bring the right people together, and create places with lasting value.",
+      items: [
+        { number: "01", title: "People first", text: "Listen closely to the people who will shape, build, and use each place." },
+        { number: "02", title: "Purposeful planning", text: "Ask the right questions early and make decisions with the whole project in mind." },
+        { number: "03", title: "Integrity in every detail", text: "Keep communication clear, expectations grounded, and commitments considered." },
+        { number: "04", title: "A lasting view", text: "Consider how a space will serve people long after the build is complete." },
+      ],
+    },
+    capabilities: {
+      kicker: "Our capabilities",
+      title: "Good work,",
+      accent: "connected.",
+      intro: "The right support depends on the project. We shape the team and the work around what it needs.",
+    },
+    closing: { eyebrow: "The next step is yours", title: "Let's build", accent: "something that matters.", body: "Tell us what you're looking to build. We'll start with a conversation.", action: "Start a conversation", href: "/contact" },
+  },
   services: {
     hero: {
       eyebrow: "What we do", title: "Considered work.", accent: "Clear delivery.",
@@ -215,7 +267,9 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
       return Array.isArray(value) ? value.slice(0, 12).filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url.length <= 2_000) : [];
     }
     if (!Array.isArray(value)) return template;
-    const limit = path.endsWith("paragraphs") ? 12 : path.endsWith("articles") ? 100 : path.endsWith("categories") ? 30 : path.endsWith("services") ? 20 : 30;
+    const limit = path.endsWith("paragraphs") || path === "approach.process.steps" || path === "approach.principles.items"
+      ? 12
+      : path.endsWith("articles") ? 100 : path.endsWith("categories") ? 30 : path.endsWith("services") ? 20 : 30;
     const itemTemplate = template[0];
     if (itemTemplate === undefined) return [];
     return value.slice(0, limit).map((item) => normalizeValue(itemTemplate, item, `${path}[]`));

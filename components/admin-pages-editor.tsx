@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultSiteContent, type SiteContent } from "@/lib/site-content/content";
 
-type SitePage = "about" | "services" | "projects" | "insights" | "contact";
+type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact";
 type FeedItem = { title: string; link: string; summary: string; publishedAt: string; image: string };
 type FeedResult = { url: string; title: string; items: FeedItem[]; error?: string };
 
 const pageLabels: { id: SitePage; label: string; hint: string }[] = [
   { id: "about", label: "About", hint: "Story, purpose, values, and strengths" },
+  { id: "approach", label: "Our approach", hint: "Approach introduction, process, principles, and closing message" },
   { id: "services", label: "Services", hint: "Capabilities, service details, and process" },
   { id: "projects", label: "Projects", hint: "Portfolio categories and page introduction" },
   { id: "insights", label: "Insights", hint: "Editorial content, RSS sources, and AI drafts" },
