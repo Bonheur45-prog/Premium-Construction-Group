@@ -1,13 +1,15 @@
 import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { getCmsUserById, hasCmsUsers, normalizeUsername, type CmsUserSummary } from "@/lib/admin/users";
 
 const SESSION_DURATION_SECONDS = 12 * 60 * 60;
 export const ADMIN_SESSION_COOKIE = "pcg_admin_session";
 
 export function adminConfigurationReady() {
-  return (process.env.ADMIN_DASHBOARD_PASSWORD?.length || 0) >= 12 &&
-    (process.env.RESERVATION_SESSION_SECRET?.length || 0) >= 32;
+  const hasBootstrapCredentials = (process.env.ADMIN_DASHBOARD_PASSWORD?.length || 0) >= 12 &&
+    Boolean(normalizeUsername(process.env.ADMIN_DASHBOARD_USERNAME || "admin"));
+  return (process.env.RESERVATION_SESSION_SECRET?.length || 0) >= 32 && (hasCmsUsers() || hasBootstrapCredentials);
 }
 
 function sign(value: string) {
@@ -16,31 +18,42 @@ function sign(value: string) {
     .digest("base64url");
 }
 
-export function verifyAdminPassword(password: string) {
-  const expectedPassword = process.env.ADMIN_DASHBOARD_PASSWORD;
-  if (!expectedPassword) return false;
-  const actual = Buffer.from(password);
-  const expected = Buffer.from(expectedPassword);
-  return actual.length === expected.length && timingSafeEqual(actual, expected);
-}
-
-export function createAdminSessionToken() {
+export function createAdminSessionToken(userId: string) {
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_DURATION_SECONDS;
-  const payload = Buffer.from(String(expiresAt)).toString("base64url");
+  const payload = Buffer.from(JSON.stringify({ userId, expiresAt })).toString("base64url");
   return `${payload}.${sign(payload)}`;
 }
 
-export function verifyAdminSessionToken(token: string | undefined) {
-  if (!token || !adminConfigurationReady()) return false;
+function sessionUserFromToken(token: string | undefined): CmsUserSummary | null {
+  if (!token || (process.env.RESERVATION_SESSION_SECRET?.length || 0) < 32) return null;
   const [payload, signature, extra] = token.split(".");
-  if (!payload || !signature || extra) return false;
+  if (!payload || !signature || extra) return null;
 
   const expected = Buffer.from(sign(payload));
   const actual = Buffer.from(signature);
-  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false;
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
 
-  const expiresAt = Number(Buffer.from(payload, "base64url").toString("utf8"));
-  return Number.isFinite(expiresAt) && expiresAt > Math.floor(Date.now() / 1000);
+  try {
+    const data: unknown = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data || typeof data !== "object" || !("userId" in data) || !("expiresAt" in data)) return null;
+    const session = data as { userId: unknown; expiresAt: unknown };
+    if (typeof session.userId !== "string" || typeof session.expiresAt !== "number" || session.expiresAt <= Math.floor(Date.now() / 1000)) return null;
+    return getCmsUserById(session.userId);
+  } catch {
+    return null;
+  }
+}
+
+export function getAdminSessionUserFromRequest(request: Request) {
+  return sessionUserFromToken(getAdminSessionTokenFromRequest(request));
+}
+
+export function isAdminSession(request: Request) {
+  return getAdminSessionUserFromRequest(request)?.role === "admin";
+}
+
+export function verifyAdminSessionToken(token: string | undefined) {
+  return sessionUserFromToken(token) !== null;
 }
 
 export function getAdminSessionTokenFromRequest(request: Request) {
@@ -51,7 +64,7 @@ export function getAdminSessionTokenFromRequest(request: Request) {
 }
 
 export function hasValidAdminSession(request: Request) {
-  return verifyAdminSessionToken(getAdminSessionTokenFromRequest(request));
+  return getAdminSessionUserFromRequest(request) !== null;
 }
 
 export function isSameOriginRequest(request: Request) {
