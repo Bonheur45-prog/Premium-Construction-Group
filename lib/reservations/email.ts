@@ -1,9 +1,19 @@
 import "server-only";
 
+import { adminConfigurationReady } from "@/lib/reservations/auth";
 import { formatReservationDateTime } from "@/lib/reservations/availability";
 import type { Reservation } from "@/lib/reservations/types";
 
 type Delivery = { customer: boolean; admin: boolean };
+
+export function reservationSystemConfigured() {
+  return Boolean(
+    process.env.RESEND_API_KEY &&
+      process.env.RESERVATION_FROM_EMAIL &&
+      process.env.RESERVATION_ADMIN_EMAIL &&
+      adminConfigurationReady(),
+  );
+}
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => {
@@ -70,15 +80,15 @@ function reservationSummary(reservation: Reservation) {
 }
 
 function summaryHtml(reservation: Reservation) {
-  const items = [
+  const items: Array<[string, string]> = [
     ["Client", reservation.name],
     ["Email", reservation.email],
-    ...(reservation.phone ? [["Phone", reservation.phone]] : []),
-    ...(reservation.company ? [["Company", reservation.company]] : []),
     ["Project", reservation.projectType],
     ["Meeting", appointmentDetails(reservation)],
-    ...(reservation.message ? [["Project notes", reservation.message]] : []),
   ];
+  if (reservation.phone) items.splice(2, 0, ["Phone", reservation.phone]);
+  if (reservation.company) items.splice(reservation.phone ? 3 : 2, 0, ["Company", reservation.company]);
+  if (reservation.message) items.push(["Project notes", reservation.message]);
 
   return `<table role="presentation" style="width:100%;border-collapse:collapse;margin-top:22px">${items
     .map(

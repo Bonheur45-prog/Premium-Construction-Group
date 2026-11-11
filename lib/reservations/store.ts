@@ -1,10 +1,10 @@
 import "server-only";
 
 import { mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
-import type { Reservation, ReservationInput, ReservationStatus } from "@/lib/reservations/types";
+import type { Reservation, ReservationInput } from "@/lib/reservations/types";
 
 const globalForReservations = globalThis as typeof globalThis & {
   reservationDatabase?: DatabaseSync;
@@ -14,7 +14,7 @@ function getDatabase() {
   if (globalForReservations.reservationDatabase) return globalForReservations.reservationDatabase;
 
   const databasePath = process.env.RESERVATIONS_DB_PATH || join(process.cwd(), "data", "reservations.sqlite");
-  mkdirSync(join(databasePath, ".."), { recursive: true });
+  mkdirSync(dirname(databasePath), { recursive: true });
 
   const database = new DatabaseSync(databasePath, { timeout: 5000 });
   database.exec(`
@@ -86,6 +86,14 @@ export function listReservations() {
     )
     .all() as Array<Record<string, unknown>>;
   return rows.map(fromRow);
+}
+
+export function hasReachedDailyReservationLimit(email: string) {
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const row = getDatabase()
+    .prepare("SELECT COUNT(*) AS total FROM reservations WHERE email = ? AND created_at >= ?")
+    .get(email, since) as { total: number };
+  return row.total >= 3;
 }
 
 export function getReservation(id: string) {
@@ -181,10 +189,3 @@ export function cancelReservation(id: string) {
   return getReservation(id);
 }
 
-export function setReservationCancelledEmailStatus(id: string, customerEmailSent: boolean, adminEmailSent: boolean) {
-  setReservationEmailStatus(id, customerEmailSent, adminEmailSent);
-}
-
-export function isReservationStatus(value: unknown): value is ReservationStatus {
-  return value === "confirmed" || value === "cancelled";
-}

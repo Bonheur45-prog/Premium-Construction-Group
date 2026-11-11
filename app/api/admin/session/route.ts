@@ -17,11 +17,18 @@ export async function POST(request: Request) {
   if (!adminConfigurationReady()) {
     return Response.json({ error: "The admin dashboard is not configured yet." }, { status: 503 });
   }
+  if (Number(request.headers.get("content-length") || 0) > 2_000) {
+    return Response.json({ error: "Request is too large." }, { status: 413 });
+  }
 
   let password = "";
   try {
-    const body = await request.json();
-    password = typeof body.password === "string" ? body.password : "";
+    const raw: unknown = await request.json();
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return Response.json({ error: "Enter the admin password." }, { status: 400 });
+    }
+    const body = raw as Record<string, unknown>;
+    password = typeof body.password === "string" ? body.password.slice(0, 512) : "";
   } catch {
     return Response.json({ error: "Enter the admin password." }, { status: 400 });
   }

@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ContactEnquiryForm } from "@/components/contact-enquiry-form";
+import { ReservationBookingForm } from "@/components/reservation-booking-form";
+import { reservationSystemConfigured } from "@/lib/reservations/email";
 
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
     "Start a conversation with Premium Construction Group about the place you want to build.",
 };
+
+export const dynamic = "force-dynamic";
 
 const nextSteps = [
   {
@@ -40,6 +44,9 @@ export default function ContactPage() {
               A good project begins with a conversation. Tell us a little about
               what you&apos;re planning and we&apos;ll take it from there.
             </p>
+            <a className="button button--primary contact-hero__reserve" href="#reserve">
+              Reserve a meeting <span aria-hidden="true">↓</span>
+            </a>
           </div>
           <div className="contact-hero__aside" aria-hidden="true">
             <span className="contact-hero__aside-index">PCG / CONTACT</span>
@@ -83,6 +90,34 @@ export default function ContactPage() {
                 <span>Considered construction.<br />Enduring value.</span>
               </div>
             </aside>
+          </div>
+        </section>
+
+        <section className="reservation-section" id="reserve" aria-labelledby="reservation-title">
+          <div className="shell reservation-section__grid">
+            <div className="reservation-section__intro">
+              <p className="section-kicker"><span>Reserve a meeting</span><span className="section-kicker__rule" /></p>
+              <h2 id="reservation-title">Make time for<br /><em>your next step.</em></h2>
+              <p>
+                Choose a time to meet with a Premium Construction Group expert.
+                We&apos;ll send a confirmation as soon as your reservation is saved.
+              </p>
+              <div className="reservation-section__facts">
+                <span><strong>60</strong> minutes</span>
+                <i />
+                <span>Weekdays</span>
+                <i />
+                <span>SAST</span>
+              </div>
+              <a className="reservation-section__jump" href="#meeting-form">Choose a meeting time <span aria-hidden="true">↓</span></a>
+            </div>
+            <div className="booking-card" id="meeting-form">
+              <div className="booking-card__header">
+                <div><span className="booking-card__step">01 / Schedule</span><h3>Book a conversation.</h3></div>
+                <span className="booking-card__symbol" aria-hidden="true">↗</span>
+              </div>
+              <ReservationBookingForm enabled={reservationSystemConfigured()} />
+            </div>
           </div>
         </section>
       </main>

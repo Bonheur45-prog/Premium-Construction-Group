@@ -40,7 +40,7 @@ function formatBookingDate(date: string, time: string) {
   }).format(scheduled);
 }
 
-export function ReservationBookingForm() {
+export function ReservationBookingForm({ enabled }: { enabled: boolean }) {
   const [enquiryType, setEnquiryType] = useState<"personal" | "company">("personal");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -154,6 +154,16 @@ export function ReservationBookingForm() {
 
   const minDate = getDateInSouthAfrica(new Date());
   const maxDate = getBookingMaxDate();
+
+  if (!enabled) {
+    return (
+      <div className="booking-unavailable" role="status">
+        <span className="booking-unavailable__index">RESERVATIONS / 01</span>
+        <h4>Online bookings are being prepared.</h4>
+        <p>Our team is preparing its meeting calendar. Available times will appear here once reservations are open.</p>
+      </div>
+    );
+  }
 
   return (
     <form className="booking-form" onSubmit={handleSubmit}>

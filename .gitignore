@@ -7,5 +7,6 @@ coverage/
 tmp/
 .env*
 !.env.example
+data/reservations.sqlite*
 *.tsbuildinfo
 next-env.d.ts

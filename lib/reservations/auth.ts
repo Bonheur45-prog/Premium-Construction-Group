@@ -6,7 +6,8 @@ const SESSION_DURATION_SECONDS = 12 * 60 * 60;
 export const ADMIN_SESSION_COOKIE = "pcg_admin_session";
 
 export function adminConfigurationReady() {
-  return Boolean(process.env.ADMIN_DASHBOARD_PASSWORD && process.env.RESERVATION_SESSION_SECRET);
+  return (process.env.ADMIN_DASHBOARD_PASSWORD?.length || 0) >= 12 &&
+    (process.env.RESERVATION_SESSION_SECRET?.length || 0) >= 32;
 }
 
 function sign(value: string) {
@@ -46,7 +47,7 @@ export function getAdminSessionTokenFromRequest(request: Request) {
   const cookieHeader = request.headers.get("cookie") || "";
   const prefix = `${ADMIN_SESSION_COOKIE}=`;
   const value = cookieHeader.split(";").map((cookie) => cookie.trim()).find((cookie) => cookie.startsWith(prefix));
-  return value ? decodeURIComponent(value.slice(prefix.length)) : undefined;
+  return value ? value.slice(prefix.length) : undefined;
 }
 
 export function hasValidAdminSession(request: Request) {
