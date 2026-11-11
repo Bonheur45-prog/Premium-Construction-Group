@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const links = [
+  { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "Services", href: "/services" },
   { label: "Projects", href: "/projects" },
@@ -14,6 +16,14 @@ const links = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  function isCurrentPage(href: string) {
+    if (href.includes("#")) return false;
+    return href === "/"
+      ? pathname === "/"
+      : pathname === href || pathname.startsWith(`${href}/`);
+  }
 
   return (
     <>
@@ -64,13 +74,19 @@ export function SiteHeader() {
             aria-label="Main navigation"
           >
             {links.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={isCurrentPage(link.href) ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
                 {link.label}
               </Link>
             ))}
             <Link
               className="button button--small button--nav"
               href="/contact"
+              aria-current={isCurrentPage("/contact") ? "page" : undefined}
               onClick={() => setOpen(false)}
             >
               Start a project <span aria-hidden="true">↗</span>

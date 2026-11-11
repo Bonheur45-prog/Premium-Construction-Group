@@ -3,18 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { projectCategories, type ProjectCategoryId } from "@/lib/project-categories";
+import type { SiteProjectCategory } from "@/lib/site-content/content";
 
-const filters: { id: "all" | ProjectCategoryId; label: string }[] = [
-  { id: "all", label: "All categories" },
-  { id: "commercial", label: "Commercial" },
-  { id: "residential", label: "Residential" },
-  { id: "infrastructure", label: "Infrastructure" },
-];
-
-export function ProjectGallery() {
-  const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]["id"]>("all");
-  const visibleCategories = projectCategories.filter(
+export function ProjectGallery({ categories }: { categories: SiteProjectCategory[] }) {
+  const filters = [{ id: "all", label: "All categories" }, ...categories.map((category) => ({ id: category.id, label: category.type }))];
+  const [activeFilter, setActiveFilter] = useState("all");
+  const visibleCategories = categories.filter(
     (category) => activeFilter === "all" || category.id === activeFilter,
   );
 
@@ -61,8 +55,8 @@ export function ProjectGallery() {
               </div>
               <Link
                 className="portfolio-category__link"
-                href="/contact"
-                aria-label={`Discuss a project in the ${category.type.toLowerCase()} category`}
+                href={category.href}
+                aria-label={category.actionLabel}
               >
                 <span aria-hidden="true">↗</span>
               </Link>

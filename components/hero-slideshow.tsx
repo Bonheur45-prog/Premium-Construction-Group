@@ -48,7 +48,15 @@ function SlideMedia({
   );
 }
 
-export function HeroSlideshow({ slides }: { slides: HomeHeroSlide[] }) {
+export function HeroSlideshow({
+  slides,
+  scrollLabel = "Scroll to explore",
+  scrollHref = "#about",
+}: {
+  slides: HomeHeroSlide[];
+  scrollLabel?: string;
+  scrollHref?: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
@@ -185,8 +193,8 @@ export function HeroSlideshow({ slides }: { slides: HomeHeroSlide[] }) {
       </div>
 
       <div className="hero-carousel__footer shell">
-        <a className="hero-carousel__scroll" href="#about">
-          <span /> Scroll to explore
+        <a className="hero-carousel__scroll" href={scrollHref}>
+          <span /> {scrollLabel}
         </a>
         <div className="hero-carousel__controls" aria-label="Slideshow controls">
           <span className="hero-carousel__count" aria-hidden="true">

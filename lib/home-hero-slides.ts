@@ -13,8 +13,8 @@ export type HomeHeroSlide = {
   caption: string;
 };
 
-// Keep slide content and media separate from the carousel so the custom CMS can
-// replace this data later. A video slide uses { type: "video", src, poster, alt }.
+// Starting homepage content for the admin editor. A video slide uses
+// { type: "video", src, poster, alt }.
 export const homeHeroSlides: HomeHeroSlide[] = [
   {
     id: "built-with-intent",

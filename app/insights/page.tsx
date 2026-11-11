@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { connection } from "next/server";
 import { InsightLibrary } from "@/components/insight-library";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { insights } from "@/lib/insights";
+import { SitePageTheme } from "@/components/site-page-theme";
+import { getSiteContent } from "@/lib/site-content/store";
 
 export const metadata: Metadata = {
   title: "Insights",
@@ -25,63 +27,61 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   );
 }
 
-export default function InsightsPage() {
+export default async function InsightsPage() {
+  await connection();
+  const content = getSiteContent().insights;
+  const { hero, library, reading, closing } = content;
+  const publishedArticles = content.articles.filter((insight) => insight.status === "published");
   return (
-    <>
+    <SitePageTheme>
       <SiteHeader />
       <main id="main-content" className="insights-page">
         <section className="insights-hero shell" id="top" aria-labelledby="insights-title">
           <div className="insights-hero__copy">
-            <p className="eyebrow"><span /> Ideas &amp; perspective</p>
-            <h1 id="insights-title">Clear thinking<br /><em>builds better.</em></h1>
-            <p className="insights-hero__intro">
-              Notes on the questions, decisions, and details that shape a thoughtful build—from the first conversation to the life of a place.
-            </p>
+            <p className="eyebrow"><span /> {hero.eyebrow}</p>
+            <h1 id="insights-title">{hero.title}<br /><em>{hero.accent}</em></h1>
+            <p className="insights-hero__intro">{hero.intro}</p>
             <div className="insights-hero__actions">
-              <Link className="button button--primary" href="#latest-insights">
-                Explore insights <Arrow diagonal />
+              <Link className="button button--primary" href={hero.primaryHref}>
+                {hero.primaryLabel} <Arrow diagonal />
               </Link>
-              <Link className="text-link" href="/contact">
-                Bring us a question <Arrow />
+              <Link className="text-link" href={hero.secondaryHref}>
+                {hero.secondaryLabel} <Arrow />
               </Link>
             </div>
           </div>
           <div className="insights-hero__visual">
             <Image
-              src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1800&q=90"
-              alt="Construction team talking through work on site"
+              src={hero.image}
+              alt={hero.imageAlt}
               fill
               priority
               unoptimized
               sizes="(max-width: 760px) 100vw, 52vw"
             />
             <div className="insights-hero__image-label">
-              <span>Perspective for the work ahead</span>
-              <span>PCG / 04</span>
+              <span>{hero.imageLabel}</span>
+              <span>PCG / {hero.index}</span>
             </div>
             <div className="insights-hero__note">
-              <span>Field notes</span>
-              <strong>Good questions make space for better answers.</strong>
+              <span>{hero.noteLabel}</span>
+              <strong>{hero.noteText}</strong>
             </div>
           </div>
-          <div className="insights-hero__index">04 <span>/ Ideas &amp; perspective</span></div>
+          <div className="insights-hero__index">{hero.index} <span>/ {hero.eyebrow}</span></div>
         </section>
 
         <section className="insights-library section-pad" id="latest-insights" aria-labelledby="latest-insights-title">
           <div className="shell">
             <div className="insights-library__heading">
               <div>
-                <p className="section-kicker"><span>Thoughts for the build</span><span className="section-kicker__rule" /></p>
-                <h2 id="latest-insights-title">Ideas to take<br /><em>into the work.</em></h2>
+                <p className="section-kicker"><span>{library.kicker}</span><span className="section-kicker__rule" /></p>
+                <h2 id="latest-insights-title">{library.title}<br /><em>{library.accent}</em></h2>
               </div>
-              <p>
-                Practical perspectives on the choices that help projects move forward and places serve people well.
-              </p>
+              <p>{library.intro}</p>
             </div>
-            <InsightLibrary />
-            <p className="image-note insights-library__note">
-              These articles are starter editorial content for the future custom CMS and should be reviewed and approved by Premium Construction Group before publication.
-            </p>
+            <InsightLibrary insights={publishedArticles} />
+            <p className="image-note insights-library__note">{library.note}</p>
           </div>
         </section>
 
@@ -89,22 +89,23 @@ export default function InsightsPage() {
           <div className="shell">
             <div className="insight-reading__heading">
               <div>
-                <p className="section-kicker section-kicker--light"><span>Longer reads</span><span className="section-kicker__rule" /></p>
-                <h2 id="insight-reading-title">A little more<br /><em>to consider.</em></h2>
+                <p className="section-kicker section-kicker--light"><span>{reading.kicker}</span><span className="section-kicker__rule" /></p>
+                <h2 id="insight-reading-title">{reading.title}<br /><em>{reading.accent}</em></h2>
               </div>
-              <p>Explore each idea in more detail. Select a story above to jump directly to it.</p>
+              <p>{reading.intro}</p>
             </div>
             <div className="insight-reading__list">
-              {insights.map((insight) => (
+              {publishedArticles.map((insight, index) => (
                 <article className="insight-article" id={insight.slug} key={insight.slug}>
                   <div className="insight-article__aside">
-                    <span>{insight.number} / {insight.topic}</span>
+                    <span>{String(index + 1).padStart(2, "0")} / {insight.topic}</span>
                     <span>{insight.readTime}</span>
                   </div>
                   <div className="insight-article__body">
                     <h3>{insight.title}</h3>
                     {insight.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                     <blockquote>{insight.takeaway}</blockquote>
+                    {insight.sourceUrl && <p className="insight-article__source">Source material: <a href={insight.sourceUrl} target="_blank" rel="noreferrer">Read the original ↗</a></p>}
                     <Link className="insight-article__service" href="/services">
                       Explore how we help <Arrow />
                     </Link>
@@ -128,16 +129,16 @@ export default function InsightsPage() {
         <section className="closing-cta shell insights-cta">
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>
           <div className="closing-cta__copy">
-            <p className="eyebrow"><span /> Every project starts somewhere</p>
-            <h2>Have a question<br />about what comes next?</h2>
-            <p>Tell us what you&apos;re planning and what you&apos;d like to understand.</p>
+            <p className="eyebrow"><span /> {closing.eyebrow}</p>
+            <h2>{closing.title}<br />{closing.accent}</h2>
+            <p>{closing.body}</p>
           </div>
-          <Link className="button button--dark" href="/contact">
-            Start a conversation <Arrow diagonal />
+          <Link className="button button--dark" href={closing.href}>
+            {closing.action} <Arrow diagonal />
           </Link>
         </section>
       </main>
       <SiteFooter />
-    </>
+    </SitePageTheme>
   );
 }

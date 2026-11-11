@@ -51,7 +51,7 @@ function timeInSouthAfrica() {
   }).format(new Date());
 }
 
-export function AdminReservationsConsole() {
+export function AdminReservationsConsole({ embedded = false }: { embedded?: boolean } = {}) {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -74,6 +74,7 @@ export function AdminReservationsConsole() {
       const response = await fetch("/api/admin/reservations", { cache: "no-store" });
       if (response.status === 401) {
         setAuthenticated(false);
+        window.dispatchEvent(new Event("admin-session-expired"));
         return;
       }
       const result = await response.json();
@@ -230,10 +231,12 @@ export function AdminReservationsConsole() {
   }
 
   if (checkingSession) {
+    if (embedded) return <div className="admin-embedded-status">Loading reservations…</div>;
     return <div className="admin-screen"><p className="admin-loading">Loading reservation dashboard…</p></div>;
   }
 
   if (!authenticated) {
+    if (embedded) return <div className="admin-embedded-status" role="alert">Your admin session could not be verified. Sign in again to continue.</div>;
     return (
       <div className="admin-screen">
         <div className="admin-login-card">
@@ -247,7 +250,7 @@ export function AdminReservationsConsole() {
             {loginError && <p className="admin-error" role="alert">{loginError}</p>}
             <button className="button button--dark" type="submit">Sign in <span aria-hidden="true">↗</span></button>
           </form>
-          <Link className="admin-back-link" href="/">← Back to website</Link>
+          <Link className="admin-back-link" href="/admin">← Admin dashboard</Link>
         </div>
       </div>
     );
@@ -267,14 +270,15 @@ export function AdminReservationsConsole() {
   });
 
   return (
-    <div className="admin-screen admin-screen--dashboard">
-      <header className="admin-topbar">
+    <div className={embedded ? "admin-reservations-embedded" : "admin-screen admin-screen--dashboard"}>
+      {!embedded && <header className="admin-topbar">
         <Link className="admin-brand" href="/" aria-label="Premium Construction Group home"><span>PCG</span><i>.</i></Link>
         <div className="admin-topbar__right">
+          <Link href="/admin">Admin dashboard</Link>
           <span>Reservations</span>
           <button type="button" onClick={handleLogout}>Sign out <span aria-hidden="true">↗</span></button>
         </div>
-      </header>
+      </header>}
       <main className="admin-dashboard shell">
         <div className="admin-dashboard__heading">
           <div>

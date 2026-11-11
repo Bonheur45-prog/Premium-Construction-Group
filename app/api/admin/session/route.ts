@@ -3,12 +3,20 @@ import {
   adminSessionCookie,
   clearAdminSessionCookie,
   createAdminSessionToken,
+  hasValidAdminSession,
   isSameOriginRequest,
   verifyAdminPassword,
 } from "@/lib/reservations/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  if (!hasValidAdminSession(request)) {
+    return Response.json({ error: "Sign in to open the admin dashboard." }, { status: 401, headers: { "Cache-Control": "no-store" } });
+  }
+  return Response.json({ authenticated: true }, { headers: { "Cache-Control": "no-store" } });
+}
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
