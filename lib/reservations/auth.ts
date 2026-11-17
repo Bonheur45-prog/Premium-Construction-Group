@@ -71,7 +71,16 @@ export function isSameOriginRequest(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin) return false;
   try {
-    return new URL(origin).origin === new URL(request.url).origin;
+    const browserOrigin = new URL(origin).origin;
+    if (browserOrigin === new URL(request.url).origin) return true;
+
+    // Behind a reverse proxy (Caddy on the VPS) the app itself is reached over plain http on 127.0.0.1,
+    // so also accept the public address the proxy forwards in X-Forwarded-Proto / X-Forwarded-Host.
+    const first = (value: string | null) => value?.split(",")[0]?.trim() || "";
+    const host = first(request.headers.get("x-forwarded-host")) || first(request.headers.get("host"));
+    const proto = first(request.headers.get("x-forwarded-proto")) || new URL(request.url).protocol.replace(":", "");
+    if (!host || !proto) return false;
+    return browserOrigin === new URL(`${proto}://${host}`).origin;
   } catch {
     return false;
   }

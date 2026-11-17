@@ -34,3 +34,20 @@ The Website section manages the hero slideshow (including image or muted video s
 The Pages section manages the editable copy, images, links, and repeatable content for all fixed pages, the Reservations page, and custom pages. For Insights, add RSS or Atom feed URLs, load feed items, and use **Create AI draft** to generate an original article draft for review. Drafts remain hidden until changed to Published and saved. RSS importing works without an AI key. To enable AI drafting, add `OPENAI_API_KEY` to `.env.local` (optionally set `OPENAI_MODEL`, which defaults to `gpt-6-luna`) and restart `pnpm dev`. The AI feature uses OpenAI's [Responses API](https://developers.openai.com/api/docs/guides/text); all generated posts require admin review before publication.
 
 Homepage edits and fixed/custom page content are stored in PostgreSQL when `DATABASE_URL` is configured, or in local JSON files for preview. Use the editor's “View live homepage” link after saving to preview changes.
+
+## Deploying to the VPS (GitHub Actions + PM2 + Caddy)
+
+The `Build and deploy` workflow builds the standalone Next.js app on GitHub (so the VPS spends no memory on builds) and uploads it to the VPS as a new release. A push to `master` deploys automatically; it can also be started from the Actions tab.
+
+| Path on the VPS | What |
+| --- | --- |
+| `/var/www/premium-construction/current` | Link to the running release |
+| `/var/www/premium-construction/releases/` | Last 3 releases (for quick rollback) |
+| `/var/www/premium-construction/shared/uploads` | CMS images and videos (served directly by Caddy at `/uploads/...`). Back this up. |
+| `/var/www/premium-construction/.env` | Site secrets (not in git, not in GitHub) |
+
+The app runs under PM2 as `premium-construction` on `127.0.0.1:3040`. All CMS content, users and reservations are in the PostgreSQL database named in `DATABASE_URL`. Config files: `deploy/ecosystem.config.cjs` and `deploy/Caddyfile.premium-construction`.
+
+Repository secrets (Settings → Secrets and variables → Actions): `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
+
+Rollback: `ln -sfn releases/<older-release> /var/www/premium-construction/current && pm2 reload premium-construction`.
