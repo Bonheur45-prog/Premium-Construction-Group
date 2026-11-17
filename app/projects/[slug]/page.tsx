@@ -3,20 +3,24 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
 import { projectDetailCopy } from "@/lib/site-content/expanded-details";
+import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
 type ProjectDetailProps = { params: Promise<{ slug: string }> };
 
-async function findProjectCategory(slug: string) {
-  return (await getSiteContent()).projects.categories.find((category) => category.id === slug) || null;
-}
-
 export async function generateMetadata({ params }: ProjectDetailProps): Promise<Metadata> {
   await connection();
   const { slug } = await params;
-  const category = await findProjectCategory(slug);
+  const content = await getSiteContent();
+  const category = content.projects.categories.find((item) => item.id === slug) || null;
   if (!category) return { title: "Project category not found", robots: { index: false, follow: false } };
-  return { title: `${category.title} | Projects`, description: category.summary };
+  return buildSeoMetadata(content, {
+    path: `/projects/${category.id}`,
+    title: `${category.title} | Projects`,
+    description: category.summary,
+    socialImage: category.image,
+    imageAlt: category.alt,
+  });
 }
 
 export default async function ProjectDetailPage({ params }: ProjectDetailProps) {

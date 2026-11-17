@@ -8,12 +8,12 @@ import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getHomePageContent } from "@/lib/homepage/store";
+import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
-  const home = (await getSiteContent()).siteSettings.seo.pages.home;
-  return { title: { absolute: home.title }, description: home.description };
+  return getManagedPageMetadata("home");
 }
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {

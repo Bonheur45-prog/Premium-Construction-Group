@@ -133,16 +133,32 @@ export function AdminWorkspace({ initialTab = "website" }: { initialTab?: AdminT
       <header className="admin-workspace__topbar">
         <AdminLogo />
         <div className="admin-workspace__actions">
-          {currentUser && <span className="admin-workspace__identity">{currentUser.username}</span>}
-          <Link href="/" target="_blank" rel="noreferrer">View website ↗</Link>
+          {currentUser && (
+            <div className="admin-workspace__identity">
+              <span aria-hidden="true">{currentUser.username.slice(0, 1).toUpperCase()}</span>
+              <span><strong>{currentUser.username}</strong><small>{currentUser.role === "admin" ? "Administrator" : "Content editor"}</small></span>
+            </div>
+          )}
+          <Link href="/" target="_blank" rel="noreferrer">View website <span aria-hidden="true">↗</span></Link>
           <button type="button" onClick={() => void handleLogout()}>Sign out</button>
         </div>
       </header>
       <nav className="admin-workspace__tabs" aria-label="Admin dashboard sections">
-        <Link className={activeTab === "website" ? "is-active" : ""} href="/admin/home" aria-current={activeTab === "website" ? "page" : undefined}>Website</Link>
-        <Link className={activeTab === "pages" ? "is-active" : ""} href="/admin/pages" aria-current={activeTab === "pages" ? "page" : undefined}>Pages</Link>
-        <Link className={activeTab === "reservations" ? "is-active" : ""} href="/admin/reservations" aria-current={activeTab === "reservations" ? "page" : undefined}>Reservations</Link>
-        {currentUser?.role === "admin" && <Link className={activeTab === "users" ? "is-active" : ""} href="/admin/users" aria-current={activeTab === "users" ? "page" : undefined}>Users</Link>}
+        <span className="admin-workspace__nav-label">Manage</span>
+        <Link className={activeTab === "website" ? "is-active" : ""} href="/admin/home" aria-current={activeTab === "website" ? "page" : undefined}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="12" rx="2" /><path d="M8 20h8m-4-3.5V20M3.5 8h17" /></svg><span>Website</span>
+        </Link>
+        <Link className={activeTab === "pages" ? "is-active" : ""} href="/admin/pages" aria-current={activeTab === "pages" ? "page" : undefined}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M7 3.5h7l4.5 4.5v12a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-16a.5.5 0 0 1 .5-.5Z" /><path d="M14 3.5V8h4.5M9 12h6m-6 3h6" /></svg><span>Pages</span>
+        </Link>
+        <Link className={activeTab === "reservations" ? "is-active" : ""} href="/admin/reservations" aria-current={activeTab === "reservations" ? "page" : undefined}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M7.5 3.5v3M16.5 3.5v3M3.5 9h17M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01" /></svg><span>Reservations</span>
+        </Link>
+        {currentUser?.role === "admin" && (
+          <Link className={activeTab === "users" ? "is-active" : ""} href="/admin/users" aria-current={activeTab === "users" ? "page" : undefined}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0m2-10.5a3.5 3.5 0 0 1 0 6.8m1 1.7a5 5 0 0 1 3 2" /></svg><span>Users</span>
+          </Link>
+        )}
       </nav>
       <div className="admin-workspace__content">
         {activeTab === "website" && <AdminHomeEditor embedded />}

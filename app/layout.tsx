@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { connection } from "next/server";
+import { buildRootMetadata, buildSiteStructuredData } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 import "./globals.css";
 
@@ -22,15 +23,7 @@ const ubuntu = localFont({
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
-  const { siteSettings } = await getSiteContent();
-  const home = siteSettings.seo.pages.home;
-  const siteName = `${siteSettings.brand.primaryName} ${siteSettings.brand.secondaryName}`;
-  return {
-    title: { default: home.title, template: `%s | ${siteName}` },
-    description: home.description,
-    applicationName: siteName,
-    openGraph: { type: "website", title: home.title, description: home.description, siteName },
-  };
+  return buildRootMetadata(await getSiteContent());
 }
 
 export const viewport: Viewport = {
@@ -39,12 +32,17 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  await connection();
+  const siteStructuredData = buildSiteStructuredData(await getSiteContent());
   return (
     <html lang="en" className={`${roboto.variable} ${ubuntu.variable}`}>
-      <body>{children}</body>
+      <body>
+        {siteStructuredData && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteStructuredData).replace(/</g, "\\u003c") }} />}
+        {children}
+      </body>
     </html>
   );
 }

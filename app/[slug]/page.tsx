@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
+import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
 type CustomPageProps = { params: Promise<{ slug: string }> };
@@ -15,10 +16,21 @@ async function findPublishedPage(slug: string) {
 }
 
 export async function generateMetadata({ params }: CustomPageProps): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const page = await findPublishedPage(slug);
+  const content = await getSiteContent();
+  const page = content.customPages.find((item) => item.slug === slug && item.status === "published") || null;
   if (!page) return { title: "Page not found", robots: { index: false, follow: false } };
-  return { title: page.title, description: page.metaDescription || page.hero.intro };
+  return buildSeoMetadata(content, {
+    path: `/${page.slug}`,
+    title: page.seoTitle || page.title,
+    description: page.metaDescription || page.hero.intro,
+    keywords: page.keywords,
+    canonicalUrl: page.canonicalUrl,
+    socialImage: page.socialImage || page.hero.image,
+    imageAlt: page.hero.imageAlt,
+    noIndex: page.noIndex,
+  });
 }
 
 function Arrow() {

@@ -3,20 +3,24 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
 import { serviceDetailCopy } from "@/lib/site-content/expanded-details";
+import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
 type ServiceDetailProps = { params: Promise<{ slug: string }> };
 
-async function findService(slug: string) {
-  return (await getSiteContent()).services.services.find((service) => service.id === slug) || null;
-}
-
 export async function generateMetadata({ params }: ServiceDetailProps): Promise<Metadata> {
   await connection();
   const { slug } = await params;
-  const service = await findService(slug);
+  const content = await getSiteContent();
+  const service = content.services.services.find((item) => item.id === slug) || null;
   if (!service) return { title: "Service not found", robots: { index: false, follow: false } };
-  return { title: `${service.title} | Services`, description: service.description };
+  return buildSeoMetadata(content, {
+    path: `/services/${service.id}`,
+    title: `${service.title} | Services`,
+    description: service.description,
+    socialImage: service.image,
+    imageAlt: service.imageAlt,
+  });
 }
 
 export default async function ServiceDetailPage({ params }: ServiceDetailProps) {

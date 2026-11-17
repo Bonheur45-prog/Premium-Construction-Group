@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import type { SiteInsight } from "@/lib/site-content/content";
+import { buildArticleStructuredData, buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
 const sectionTitles: Record<string, string[]> = {
@@ -35,20 +36,26 @@ const articleQuestions: Record<string, string[]> = {
   ],
 };
 
-async function findPublishedInsight(slug: string) {
-  const content = await getSiteContent();
-  return content.insights.articles.find((insight) => insight.slug === slug && insight.status === "published") || null;
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const insight = await findPublishedInsight(slug);
+  const content = await getSiteContent();
+  const insight = content.insights.articles.find((article) => article.slug === slug && article.status === "published") || null;
   if (!insight) return { title: "Insight not found | Insights" };
-  return {
-    title: `${insight.title} | Insights`,
-    description: insight.excerpt,
-    openGraph: { title: insight.title, description: insight.excerpt, images: [insight.image] },
-  };
+  return buildSeoMetadata(content, {
+    path: `/insights/${insight.slug}`,
+    title: insight.seoTitle || `${insight.title} | Insights`,
+    description: insight.metaDescription || insight.excerpt,
+    keywords: insight.keywords,
+    canonicalUrl: insight.canonicalUrl,
+    socialImage: insight.socialImage || insight.image,
+    imageAlt: insight.imageAlt,
+    noIndex: insight.noIndex,
+    type: "article",
+    publishedAt: insight.publishedAt,
+    updatedAt: insight.updatedAt,
+    author: insight.author,
+  });
 }
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -59,9 +66,9 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   );
 }
 
-function InsightArticle({ insight, related }: { insight: SiteInsight; related: SiteInsight[] }) {
+function InsightArticle({ insight, related, structuredData }: { insight: SiteInsight; related: SiteInsight[]; structuredData: ReturnType<typeof buildArticleStructuredData> }) {
   const headings = sectionTitles[insight.slug] || ["Understand the idea", "Consider the choices", "Make it practical"];
-  const questions = articleQuestions[insight.slug] || [
+  const questions = insight.questions.length ? insight.questions : articleQuestions[insight.slug] || [
     "What matters most to the people involved?",
     "Which decision would be useful to make next?",
     "What should the team keep in view as work progresses?",
@@ -72,6 +79,7 @@ function InsightArticle({ insight, related }: { insight: SiteInsight; related: S
       <SiteHeader />
       <PageScrollProgress />
       <main id="main-content" className="insight-detail-page">
+        {structuredData && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />}
         <nav className="insight-detail-breadcrumb shell" aria-label="Breadcrumb">
           <Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/insights">Insights</Link><span aria-hidden="true">/</span><span aria-current="page">{insight.title}</span>
         </nav>
@@ -101,7 +109,7 @@ function InsightArticle({ insight, related }: { insight: SiteInsight; related: S
                 <ScrollReveal as="section" className="insight-detail-section" key={`${index}-${paragraph.slice(0, 32)}`} delay={index * 70}>
                   <span className="insight-detail-section__number">{String(index + 1).padStart(2, "0")}</span>
                   <div>
-                    <h2>{headings[index] || `A closer look ${String(index + 1).padStart(2, "0")}`}</h2>
+                    <h2>{insight.sectionTitles[index]?.trim() || headings[index] || `A closer look ${String(index + 1).padStart(2, "0")}`}</h2>
                     <p>{paragraph}</p>
                   </div>
                 </ScrollReveal>
@@ -174,5 +182,5 @@ export default async function InsightDetailPage({ params }: { params: Promise<{ 
   if (!insight) notFound();
   const published = content.insights.articles.filter((article) => article.status === "published" && article.slug !== insight.slug);
   const related = [...published.filter((article) => article.topic === insight.topic), ...published.filter((article) => article.topic !== insight.topic)].slice(0, 2);
-  return <InsightArticle insight={insight} related={related} />;
+  return <InsightArticle insight={insight} related={related} structuredData={buildArticleStructuredData(content, insight)} />;
 }

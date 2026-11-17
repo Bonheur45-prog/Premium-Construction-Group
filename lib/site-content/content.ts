@@ -6,7 +6,12 @@ export type CustomSitePage = {
   title: string;
   slug: string;
   status: "draft" | "published";
+  seoTitle: string;
   metaDescription: string;
+  keywords: string[];
+  canonicalUrl: string;
+  socialImage: string;
+  noIndex: boolean;
   hero: {
     eyebrow: string;
     title: string;
@@ -24,7 +29,12 @@ export const customSitePageTemplate: CustomSitePage = {
   title: "New page",
   slug: "new-page",
   status: "draft",
+  seoTitle: "",
   metaDescription: "",
+  keywords: [],
+  canonicalUrl: "",
+  socialImage: "",
+  noIndex: false,
   hero: {
     eyebrow: "Premium Construction Group",
     title: "A considered beginning",
@@ -240,7 +250,23 @@ export const defaultSiteContent = {
     },
     library: { kicker: "Thoughts for the build", title: "Ideas to take", accent: "into the work.", intro: "Practical perspectives on the choices that help projects move forward and places serve people well." },
     reading: { kicker: "Longer reads", title: "A little more", accent: "to consider.", intro: "Explore each idea in more detail. Select a story above to jump directly to it." },
-    articles: starterInsights.map((insight) => ({ ...insight, paragraphs: [...insight.paragraphs], status: "published" as "published" | "draft", sourceUrl: "" })),
+    articles: starterInsights.map((insight) => ({
+      ...insight,
+      id: insight.slug,
+      paragraphs: [...insight.paragraphs],
+      sectionTitles: [] as string[],
+      questions: [] as string[],
+      author: "Premium Construction Group",
+      publishedAt: "",
+      updatedAt: "",
+      seoTitle: "",
+      metaDescription: "",
+      keywords: [] as string[],
+      canonicalUrl: "",
+      socialImage: "",
+      status: "published" as "published" | "draft",
+      sourceUrl: "",
+    })),
     feedUrls: [] as string[],
     closing: { eyebrow: "Every project starts somewhere", title: "Have a question", accent: "about what comes next?", body: "Tell us what you're planning and what you'd like to understand.", action: "Start a conversation", href: "/contact" },
   },
@@ -330,15 +356,21 @@ export const defaultSiteContent = {
       ctaHref: "/reservations",
     },
     seo: {
+      siteUrl: "",
+      titleTemplate: "%s | Premium Construction Group",
+      defaultImage: "/premium-mark.png",
+      twitterHandle: "",
+      robots: { index: true, follow: true },
+      verification: { google: "", bing: "" },
       pages: {
-        home: { title: "Premium Construction Group | Built with intent", description: "Thoughtful construction, clear communication, and enduring quality. Discover Premium Construction Group and start a conversation about your next project." },
-        about: { title: "About Us", description: "Learn about Premium Construction Group Ltd, our purpose, values, and considered approach to construction." },
-        approach: { title: "Our Approach", description: "See how Premium Construction Group brings people, plans, and practical decisions together to create thoughtful places that last." },
-        services: { title: "Our Services", description: "Explore construction delivery, design coordination, and project management from Premium Construction Group Ltd." },
-        projects: { title: "Projects", description: "Explore the commercial, residential, and infrastructure categories represented in the Premium Construction Group portfolio." },
-        insights: { title: "Insights", description: "Read construction perspectives, company news, and ideas from Premium Construction Group." },
-        contact: { title: "Contact Us", description: "Start a conversation with Premium Construction Group about the place you want to build." },
-        reservations: { title: "Reserve a Meeting", description: "Choose a time to talk through your construction plans with Premium Construction Group." },
+        home: { title: "Premium Construction Group | Built with intent", seoTitle: "", description: "Thoughtful construction, clear communication, and enduring quality. Discover Premium Construction Group and start a conversation about your next project.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        about: { title: "About Us", seoTitle: "", description: "Learn about Premium Construction Group Ltd, our purpose, values, and considered approach to construction.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        approach: { title: "Our Approach", seoTitle: "", description: "See how Premium Construction Group brings people, plans, and practical decisions together to create thoughtful places that last.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        services: { title: "Our Services", seoTitle: "", description: "Explore construction delivery, design coordination, and project management from Premium Construction Group Ltd.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        projects: { title: "Projects", seoTitle: "", description: "Explore the commercial, residential, and infrastructure categories represented in the Premium Construction Group portfolio.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        insights: { title: "Insights", seoTitle: "", description: "Read construction perspectives, company news, and ideas from Premium Construction Group.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        contact: { title: "Contact Us", seoTitle: "", description: "Start a conversation with Premium Construction Group about the place you want to build.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        reservations: { title: "Reserve a Meeting", seoTitle: "", description: "Choose a time to talk through your construction plans with Premium Construction Group.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
       },
     },
     footer: {
@@ -402,6 +434,18 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
   if (typeof template === "string") {
     if (typeof value !== "string") return template;
     const cleaned = value.slice(0, path.includes("paragraphs") ? 12_000 : 5_000);
+    if (path.endsWith(".siteUrl")) {
+      if (!cleaned) return "";
+      try {
+        const siteUrl = new URL(cleaned);
+        return siteUrl.protocol === "https:" || siteUrl.protocol === "http:" ? siteUrl.origin : template;
+      } catch {
+        return template;
+      }
+    }
+    if (path.endsWith(".seoTitle")) return cleaned.slice(0, 70);
+    if (path.endsWith(".metaDescription") || (path.startsWith("siteSettings.seo.pages.") && path.endsWith(".description"))) return cleaned.slice(0, 320);
+    if (path.endsWith(".twitterHandle")) return cleaned.replace(/[^a-z0-9_@]/gi, "").slice(0, 16);
     if (path.endsWith("sourceUrl")) return !cleaned || /^https?:\/\//i.test(cleaned) ? cleaned : template;
     if (/(href|url)$/i.test(path)) return isSafeHref(cleaned) ? cleaned : template;
     if (/(image|src|logo)$/i.test(path) && !isSafeMedia(cleaned)) return template;
@@ -426,6 +470,11 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
     if (path === "insights.feedUrls") {
       return Array.isArray(value) ? value.slice(0, 12).filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url) && url.length <= 2_000) : [];
     }
+    if (/\.(keywords|sectionTitles|questions)$/.test(path)) {
+      return Array.isArray(value)
+        ? value.slice(0, 40).filter((item): item is string => typeof item === "string").map((item) => item.slice(0, path.endsWith(".keywords") ? 100 : 500))
+        : [];
+    }
     if (!Array.isArray(value)) return template;
     const limit = path.endsWith("paragraphs") || path === "approach.process.steps" || path === "approach.principles.items"
       ? 12
@@ -443,6 +492,16 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
 
 export function normalizeSiteContent(value: unknown): SiteContent {
   const normalized = normalizeValue(defaultSiteContent, value, "") as SiteContent;
+  const seenArticleIds = new Set<string>();
+  const articles = normalized.insights.articles.map((article, index) => {
+    let id = article.id || `article-${index + 1}`;
+    if (seenArticleIds.has(id)) id = `article-${article.slug || index + 1}`;
+    let suffix = 2;
+    const baseId = id;
+    while (seenArticleIds.has(id)) id = `${baseId}-${suffix++}`;
+    seenArticleIds.add(id);
+    return { ...article, id };
+  });
   const incomingPages = isRecord(value) && Array.isArray(value.customPages) ? value.customPages : [];
   const reservedSlugs = new Set(["admin", "api", "about", "approach", "services", "projects", "insights", "contact", "reservations"]);
   const seen = new Set<string>();
@@ -457,5 +516,5 @@ export function normalizeSiteContent(value: unknown): SiteContent {
       return true;
     });
 
-  return { ...normalized, customPages };
+  return { ...normalized, insights: { ...normalized.insights, articles }, customPages };
 }
