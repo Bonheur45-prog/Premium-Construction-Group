@@ -85,7 +85,6 @@ export default async function ProjectsPage() {
 
             <ProjectGallery categories={categories} />
 
-            <p className="image-note portfolio-section__note">{portfolio.note}</p>
           </div>
         </section>
 

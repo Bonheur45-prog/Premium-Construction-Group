@@ -153,7 +153,6 @@ export default async function ServicesPage() {
                 </ScrollReveal>
               ))}
             </ScrollReveal>
-            <p className="service-image-note">{process.imageNote}</p>
           </div>
         </section>
 

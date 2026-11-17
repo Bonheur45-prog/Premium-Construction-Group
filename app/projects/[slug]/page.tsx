@@ -56,7 +56,6 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
       sections={sections}
       focus={focus}
       related={related}
-      note={content.projects.portfolio.note}
     />
   );
 }

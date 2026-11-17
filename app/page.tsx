@@ -130,7 +130,6 @@ export default async function HomePage() {
                 ))}
               </div>
               <div className="home-services__footer">
-                <p>{home.services.note}</p>
                 <Link className="button button--primary" href={home.services.action.href}>{home.services.action.label}<Arrow /></Link>
               </div>
             </div>
@@ -162,7 +161,6 @@ export default async function HomePage() {
                   </Link>
                 ))}
               </div>
-              <p className="home-projects__note">{home.projects.note}</p>
             </div>
           </section>
         )}

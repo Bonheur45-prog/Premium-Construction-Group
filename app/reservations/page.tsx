@@ -98,7 +98,6 @@ export default async function ReservationsPage() {
                 </article>
               ))}
             </div>
-            <p className="reservation-preparation__note">{preparation.note}</p>
           </div>
         </section>
 

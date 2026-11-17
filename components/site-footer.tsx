@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SocialIcons } from "@/components/social-icons";
 import { getSiteContent } from "@/lib/site-content/store";
 
 export async function SiteFooter({ showInvitation = true }: { showInvitation?: boolean }) {
@@ -34,6 +35,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
             </span>
           </Link>
           <p className="site-footer__description">{brand.footerDescription}</p>
+          <SocialIcons className="social-icons--footer" />
         </div>
 
         <nav className="site-footer__links" aria-label="Explore Premium Construction Group">

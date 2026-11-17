@@ -35,7 +35,6 @@ export type HomePageContent = {
     headline: { lead: string; accent: string };
     aside: string;
     capabilities: { id: string; number: string; title: string; text: string; icon: string }[];
-    note: string;
     action: { label: string; href: string };
   };
   projects: {
@@ -45,7 +44,6 @@ export type HomePageContent = {
     aside: string;
     action: { label: string; href: string };
     cards: { id: string; type: string; title: string; image: string; alt: string; href: string; size: string }[];
-    note: string;
   };
   approach: {
     enabled: boolean;
@@ -139,7 +137,6 @@ export const defaultHomePageContent: HomePageContent = {
         icon: "compass",
       },
     ],
-    note: "Every project is different.",
     action: { label: "Find the right fit", href: "/services" },
   },
   projects: {
@@ -157,7 +154,6 @@ export const defaultHomePageContent: HomePageContent = {
       href: `/projects/${project.id}`,
       size: index === 0 ? "tall" : "normal",
     })),
-    note: "Architecture imagery shown as a visual direction. Project photography and details can be added as they are approved.",
   },
   approach: {
     enabled: true,

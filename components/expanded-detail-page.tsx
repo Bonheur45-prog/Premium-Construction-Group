@@ -25,7 +25,6 @@ type ExpandedDetailPageProps = {
   sections: ExpandedDetailSection[];
   focus: ExpandedDetailFocus[];
   related: RelatedDetail[];
-  note?: string;
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -49,7 +48,6 @@ export function ExpandedDetailPage({
   sections,
   focus,
   related,
-  note,
 }: ExpandedDetailPageProps) {
   const collectionHref = kind === "service" ? "/services" : "/projects";
   const collectionLabel = kind === "service" ? "Services" : "Projects";
@@ -119,7 +117,6 @@ export function ExpandedDetailPage({
               </ul>
             </ScrollReveal>
 
-            {note && <p className="expanded-detail-note">{note}</p>}
           </div>
         </section>
 

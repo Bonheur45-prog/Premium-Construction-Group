@@ -78,7 +78,6 @@ export default async function InsightsPage() {
               <p>{library.intro}</p>
             </div>
             <InsightLibrary insights={publishedArticles} />
-            <p className="image-note insights-library__note">{library.note}</p>
           </div>
         </section>
 

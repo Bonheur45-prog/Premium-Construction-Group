@@ -497,7 +497,6 @@ export function AdminHomeEditor({ embedded = false }: { embedded?: boolean } = {
             <Field label="Main heading" value={content.services.headline.lead} onChange={(value) => updateContent((draft) => { draft.services.headline.lead = value; })} />
             <Field label="Highlighted heading" value={content.services.headline.accent} onChange={(value) => updateContent((draft) => { draft.services.headline.accent = value; })} />
             <TextAreaField label="Supporting text" value={content.services.aside} onChange={(value) => updateContent((draft) => { draft.services.aside = value; })} />
-            <Field label="Bottom note" value={content.services.note} onChange={(value) => updateContent((draft) => { draft.services.note = value; })} />
             <ActionFields label={content.services.action.label} href={content.services.action.href}
               onLabelChange={(value) => updateContent((draft) => { draft.services.action.label = value; })}
               onHrefChange={(value) => updateContent((draft) => { draft.services.action.href = value; })} />
@@ -531,7 +530,6 @@ export function AdminHomeEditor({ embedded = false }: { embedded?: boolean } = {
             <ActionFields label={content.projects.action.label} href={content.projects.action.href}
               onLabelChange={(value) => updateContent((draft) => { draft.projects.action.label = value; })}
               onHrefChange={(value) => updateContent((draft) => { draft.projects.action.href = value; })} />
-            <TextAreaField label="Image note" value={content.projects.note} onChange={(value) => updateContent((draft) => { draft.projects.note = value; })} />
           </div>
           <h3 className="admin-home-subsection">Project cards</h3>
           <div className="admin-home-card-list">

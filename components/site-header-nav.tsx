@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { SocialIcons } from "@/components/social-icons";
 
 type HeaderSettings = {
   brand: { legalName: string; primaryName: string; secondaryName: string; logo: string; strapline: string };
@@ -51,6 +52,8 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
             </span>
           </Link>
 
+          <SocialIcons className="social-icons--mobile" />
+
           <button
             className={`menu-toggle${open ? " is-open" : ""}`}
             type="button"
@@ -78,6 +81,7 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
                 {link.label}
               </Link>
             ))}
+            <SocialIcons className="social-icons--nav" />
             <Link
               className="button button--small button--nav"
               href={settings.header.ctaHref}

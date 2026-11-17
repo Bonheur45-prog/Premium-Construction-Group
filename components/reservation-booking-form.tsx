@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Link from "next/link";
 
 const TIME_ZONE = "Africa/Johannesburg";
 
@@ -70,7 +71,7 @@ export function ReservationBookingForm({
   } | null>(null);
 
   useEffect(() => {
-    if (!date) {
+    if (!date || !enabled) {
       setAvailability(null);
       setTime("");
       return;
@@ -100,10 +101,11 @@ export function ReservationBookingForm({
       });
 
     return () => controller.abort();
-  }, [date]);
+  }, [date, enabled]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!enabled) return;
     if (!time) {
       setError("Choose an available meeting time to continue.");
       return;
@@ -169,31 +171,27 @@ export function ReservationBookingForm({
   const minDate = getDateInSouthAfrica(new Date());
   const maxDate = getBookingMaxDate(windowDays);
 
-  if (!enabled) {
-    return (
-      <div className="booking-unavailable" role="status">
-        <span className="booking-unavailable__index">RESERVATIONS / 01</span>
-        <h4>Online bookings are being prepared.</h4>
-        <p>Our team is preparing its meeting calendar. Available times will appear here once reservations are open.</p>
-      </div>
-    );
-  }
-
   return (
     <form className="booking-form" onSubmit={handleSubmit}>
       <div className="booking-form__identity">
         <div className="booking-form__choice" role="group" aria-label="Reservation type">
-          <button type="button" className={enquiryType === "personal" ? "is-selected" : ""} aria-pressed={enquiryType === "personal"} onClick={() => setEnquiryType("personal")}>
+          <button type="button" disabled={!enabled} className={enquiryType === "personal" ? "is-selected" : ""} aria-pressed={enquiryType === "personal"} onClick={() => setEnquiryType("personal")}>
             <span aria-hidden="true">01</span> Personal
           </button>
-          <button type="button" className={enquiryType === "company" ? "is-selected" : ""} aria-pressed={enquiryType === "company"} onClick={() => setEnquiryType("company")}>
+          <button type="button" disabled={!enabled} className={enquiryType === "company" ? "is-selected" : ""} aria-pressed={enquiryType === "company"} onClick={() => setEnquiryType("company")}>
             <span aria-hidden="true">02</span> Company
           </button>
         </div>
-        <p>We&apos;ll use these details to confirm your meeting.</p>
+        <p>{enabled ? "We'll use these details to confirm your meeting." : "Online booking is not open yet. Please contact our team to arrange a meeting."}</p>
       </div>
 
-      <div className="booking-form__fields">
+      {!enabled && (
+        <p className="booking-form__availability" role="status">
+          The reservation form is shown here. <Link href="/contact">Contact the team</Link> to arrange a meeting while online booking is being prepared.
+        </p>
+      )}
+
+      <fieldset className="booking-form__fields" disabled={!enabled}>
         <label className="booking-field">
           <span>First name <i>*</i></span>
           <input name="firstName" autoComplete="given-name" placeholder="Your first name" required />
@@ -249,16 +247,16 @@ export function ReservationBookingForm({
           Leave this field blank
           <input name="website" tabIndex={-1} autoComplete="off" />
         </label>
-      </div>
+      </fieldset>
 
       {error && <p className="booking-form__message booking-form__message--error" role="alert">{error}</p>}
       <div className="booking-form__submit-row">
-        <p>{durationMinutes}-minute meetings · {daysLabel} · South Africa time</p>
-        <button className="button button--dark" type="submit" disabled={submitting || loadingTimes}>
-          {submitting ? "Reserving…" : "Reserve a meeting"} <span aria-hidden="true">↗</span>
+        <p>{enabled ? `${durationMinutes}-minute meetings · ${daysLabel} · South Africa time` : "Online booking is opening soon."}</p>
+        <button className="button button--dark" type="submit" disabled={!enabled || submitting || loadingTimes}>
+          {!enabled ? "Booking opening soon" : submitting ? "Reserving…" : "Reserve a meeting"} <span aria-hidden="true">↗</span>
         </button>
       </div>
-      <p className="booking-form__timezone">Available {daysLabel.toLowerCase()} from {hoursLabel} {timezoneLabel}. Your confirmation email will include the reservation time.</p>
+      <p className="booking-form__timezone">{enabled ? `Available ${daysLabel.toLowerCase()} from ${hoursLabel} ${timezoneLabel}. Your confirmation email will include the reservation time.` : "Your details will be available to enter here when online booking opens."}</p>
     </form>
   );
 }
