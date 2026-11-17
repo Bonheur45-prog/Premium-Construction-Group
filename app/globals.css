@@ -1587,6 +1587,26 @@ p { font-family: var(--font-ubuntu), "Ubuntu", sans-serif !important; }
 .home-page .hero-carousel__indicator > span { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.54); }
 .home-page .hero-carousel__indicator:hover > span,
 .home-page .hero-carousel__indicator.is-active > span { width: 24px; height: 8px; border-radius: 8px; background: #f36b2f; }
+.home-page .home-back-to-top {
+  position: fixed;
+  z-index: 45;
+  right: clamp(20px,3vw,38px);
+  bottom: clamp(20px,3vh,34px);
+  display: grid;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--night-deep);
+  box-shadow: 0 12px 30px rgba(9,19,39,.3);
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease, color .2s ease;
+}
+.home-page .home-back-to-top:hover { transform: translateY(-4px); background: var(--night-deep); color: white; }
+.home-page .home-back-to-top:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+.home-page .home-back-to-top svg { width: 25px; height: 25px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 
 .home-proof-strip { background: #101a33; color: white; }
 .home-proof-strip .belief-band__inner { min-height: 96px; gap: 30px; }

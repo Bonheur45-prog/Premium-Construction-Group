@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import type { CSSProperties } from "react";
+import { BackToTopButton } from "@/components/back-to-top-button";
 import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -204,6 +205,7 @@ export default async function HomePage() {
         )}
       </main>
       <SiteFooter showInvitation={false} />
+      <BackToTopButton />
     </div>
   );
 }
