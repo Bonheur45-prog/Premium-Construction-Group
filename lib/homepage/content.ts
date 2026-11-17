@@ -66,19 +66,11 @@ export type HomePageContent = {
 };
 
 export const bodyFontOptions = [
-  { label: "Avenir / Segoe", value: '"Avenir Next", Avenir, "Segoe UI", Arial, sans-serif' },
-  { label: "Arial", value: "Arial, Helvetica, sans-serif" },
-  { label: "Georgia", value: 'Georgia, "Times New Roman", serif' },
-  { label: "Trebuchet", value: '"Trebuchet MS", Arial, sans-serif' },
-  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+  { label: "Ubuntu", value: '"Ubuntu", sans-serif' },
 ];
 
 export const headingFontOptions = [
-  { label: "Georgia", value: 'Georgia, "Times New Roman", serif' },
-  { label: "Avenir / Segoe", value: '"Avenir Next", Avenir, "Segoe UI", Arial, sans-serif' },
-  { label: "Arial", value: "Arial, Helvetica, sans-serif" },
-  { label: "Trebuchet", value: '"Trebuchet MS", Arial, sans-serif' },
-  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+  { label: "Roboto Bold", value: '"Roboto", sans-serif' },
 ];
 
 export const defaultHomePageContent: HomePageContent = {
@@ -86,17 +78,17 @@ export const defaultHomePageContent: HomePageContent = {
     bodyFont: bodyFontOptions[0].value,
     headingFont: headingFontOptions[0].value,
     colors: {
-      ink: "#183746",
-      inkSoft: "#49616a",
-      night: "#123448",
-      nightDeep: "#102d3d",
-      blue: "#1b5b7c",
-      teal: "#56a9c2",
-      tealPale: "#d8e9ec",
-      amber: "#efa94f",
-      paper: "#f7f6f2",
-      white: "#fffefa",
-      line: "#d3dadd",
+      ink: "#151b2b",
+      inkSoft: "#5a6170",
+      night: "#111a32",
+      nightDeep: "#0c1429",
+      blue: "#f36b2f",
+      teal: "#f36b2f",
+      tealPale: "#edf0f4",
+      amber: "#f36b2f",
+      paper: "#f5f6f8",
+      white: "#ffffff",
+      line: "#d8dbe2",
     },
   },
   hero: { enabled: true, scrollLabel: "Scroll to explore", scrollHref: "#about", slides: homeHeroSlides },
@@ -162,7 +154,7 @@ export const defaultHomePageContent: HomePageContent = {
       title: project.title,
       image: project.image,
       alt: project.alt,
-      href: `/projects#${project.id}`,
+      href: `/projects/${project.id}`,
       size: index === 0 ? "tall" : "normal",
     })),
     note: "Architecture imagery shown as a visual direction. Project photography and details can be added as they are approved.",

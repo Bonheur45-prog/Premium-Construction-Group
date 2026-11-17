@@ -115,7 +115,7 @@ export default async function ApproachPage() {
             </div>
             <div className="approach-capabilities__grid">
               {capabilities.map((capability) => (
-                <Link className="approach-capability" href={`/services#${capability.id}`} key={capability.id}>
+                <Link className="approach-capability" href={`/services/${capability.id}`} key={capability.id}>
                   <span>{capability.number} / {capability.category}</span>
                   <h3>{capability.title}</h3>
                   <p>{capability.description}</p>

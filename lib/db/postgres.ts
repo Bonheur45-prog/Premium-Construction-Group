@@ -75,6 +75,12 @@ export async function ensurePostgresSchema() {
         password_hash TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS pcg_insight_subscribers (
+        email TEXT PRIMARY KEY,
+        source_insight TEXT NOT NULL,
+        subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        unsubscribed_at TIMESTAMPTZ
+      );
     `).then(() => undefined).catch((error) => {
       globalForPostgres.pcgSchemaPromise = undefined;
       throw error;

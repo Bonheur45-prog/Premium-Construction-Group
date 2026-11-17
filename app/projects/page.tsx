@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import { ProjectGallery } from "@/components/project-gallery";
+import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
@@ -35,9 +36,10 @@ export default async function ProjectsPage() {
   return (
     <SitePageTheme>
       <SiteHeader />
+      <PageScrollProgress />
       <main id="main-content" className="projects-page">
         <section className="projects-hero shell" id="top" aria-labelledby="projects-title">
-          <div className="projects-hero__copy">
+          <ScrollReveal className="projects-hero__copy">
             <p className="eyebrow"><span /> {hero.eyebrow}</p>
             <h1 id="projects-title">{hero.title}<br /><em>{hero.accent}</em></h1>
             <p className="projects-hero__intro">{hero.intro}</p>
@@ -49,8 +51,8 @@ export default async function ProjectsPage() {
                 {hero.secondaryLabel} <Arrow />
               </Link>
             </div>
-          </div>
-          <div className="projects-hero__visual">
+          </ScrollReveal>
+          <ScrollReveal className="projects-hero__visual" delay={120}>
             <Image
               src={hero.image}
               alt={hero.imageAlt}
@@ -67,19 +69,19 @@ export default async function ProjectsPage() {
               <span>{hero.noteLabel}</span>
               <strong>{hero.noteText}</strong>
             </div>
-          </div>
+          </ScrollReveal>
           <div className="projects-hero__index">{hero.index} <span>/ {hero.eyebrow}</span></div>
         </section>
 
         <section className="portfolio-section section-pad" id="portfolio" aria-labelledby="portfolio-title">
           <div className="shell">
-            <div className="portfolio-section__heading">
+            <ScrollReveal className="portfolio-section__heading">
               <div>
                 <p className="section-kicker"><span>{portfolio.kicker}</span><span className="section-kicker__rule" /></p>
                 <h2 id="portfolio-title">{portfolio.title}<br /><em>{portfolio.accent}</em></h2>
               </div>
               <p>{portfolio.intro}</p>
-            </div>
+            </ScrollReveal>
 
             <ProjectGallery categories={categories} />
 
@@ -88,13 +90,13 @@ export default async function ProjectsPage() {
         </section>
 
         <section className="project-belief" aria-label="Our perspective">
-          <div className="shell project-belief__inner">
+          <ScrollReveal className="shell project-belief__inner">
           <span>{belief.title}</span>
           <p>{belief.text}</p>
-          </div>
+          </ScrollReveal>
         </section>
 
-        <section className="closing-cta shell projects-cta">
+        <ScrollReveal as="section" className="closing-cta shell projects-cta" delay={80}>
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>
           <div className="closing-cta__copy">
             <p className="eyebrow"><span /> {closing.eyebrow}</p>
@@ -104,7 +106,7 @@ export default async function ProjectsPage() {
           <Link className="button button--dark" href={closing.href}>
             {closing.action} <Arrow diagonal />
           </Link>
-        </section>
+        </ScrollReveal>
       </main>
       <SiteFooter />
     </SitePageTheme>

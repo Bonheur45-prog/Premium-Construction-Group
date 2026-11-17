@@ -147,7 +147,7 @@ export default async function AboutPage() {
                   <span>{strength.number}</span>
                   <h3>{strength.title}</h3>
                   <p>{strength.text}</p>
-                  <Link href={`/services#${strength.slug}`} aria-label={`Explore ${strength.title}`}>
+                  <Link href={`/services/${strength.slug}`} aria-label={`Explore ${strength.title}`}>
                     <Arrow diagonal />
                   </Link>
                 </article>

@@ -367,7 +367,7 @@ export function AdminPagesEditor() {
     <main className="admin-dashboard shell admin-pages-dashboard">
       <div className="admin-home-heading">
         <div><p className="admin-kicker">Site content</p><h1>Page<br /><em>editor.</em></h1></div>
-        <p>Edit page copy, buttons, imagery, and repeatable content here. Shared colors and fonts are in Website. Create custom pages and review article drafts before publishing.</p>
+        <p>Edit page copy, buttons, imagery, and repeatable content here. Shared colors are in Website; headings use Roboto Bold and paragraphs use Ubuntu across the site. Create custom pages and review article drafts before publishing.</p>
       </div>
       <div className="admin-pages-tabs" role="group" aria-label="Choose a page to edit">
         {pageLabels.map((page) => <button type="button" key={page.id} className={selectedPage === page.id ? "is-active" : ""} aria-pressed={selectedPage === page.id} onClick={() => setSelectedPage(page.id)}>{page.label}</button>)}

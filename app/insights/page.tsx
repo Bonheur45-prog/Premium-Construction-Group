@@ -27,7 +27,7 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 export default async function InsightsPage() {
   await connection();
   const content = (await getSiteContent()).insights;
-  const { hero, library, reading, closing } = content;
+  const { hero, library, closing } = content;
   const publishedArticles = content.articles.filter((insight) => insight.status === "published");
   return (
     <SitePageTheme>
@@ -79,47 +79,6 @@ export default async function InsightsPage() {
             </div>
             <InsightLibrary insights={publishedArticles} />
             <p className="image-note insights-library__note">{library.note}</p>
-          </div>
-        </section>
-
-        <section className="insight-reading section-pad" aria-labelledby="insight-reading-title">
-          <div className="shell">
-            <div className="insight-reading__heading">
-              <div>
-                <p className="section-kicker section-kicker--light"><span>{reading.kicker}</span><span className="section-kicker__rule" /></p>
-                <h2 id="insight-reading-title">{reading.title}<br /><em>{reading.accent}</em></h2>
-              </div>
-              <p>{reading.intro}</p>
-            </div>
-            <div className="insight-reading__list">
-              {publishedArticles.map((insight, index) => (
-                <article className="insight-article" id={insight.slug} key={insight.slug}>
-                  <div className="insight-article__aside">
-                    <span>{String(index + 1).padStart(2, "0")} / {insight.topic}</span>
-                    <span>{insight.readTime}</span>
-                  </div>
-                  <div className="insight-article__body">
-                    <h3>{insight.title}</h3>
-                    {insight.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                    <blockquote>{insight.takeaway}</blockquote>
-                    {insight.sourceUrl && <p className="insight-article__source">Source material: <a href={insight.sourceUrl} target="_blank" rel="noreferrer">Read the original ↗</a></p>}
-                    <Link className="insight-article__service" href="/services">
-                      Explore how we help <Arrow />
-                    </Link>
-                  </div>
-                  <Link className="insight-article__image" href="#latest-insights" aria-label="Back to all insights">
-                    <Image
-                      src={insight.image}
-                      alt={insight.imageAlt}
-                      fill
-                      unoptimized
-                      sizes="(max-width: 760px) 100vw, 34vw"
-                    />
-                    <span>Back to all insights ↑</span>
-                  </Link>
-                </article>
-              ))}
-            </div>
           </div>
         </section>
 

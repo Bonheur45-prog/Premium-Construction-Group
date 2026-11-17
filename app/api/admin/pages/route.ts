@@ -1,5 +1,6 @@
 import { hasValidAdminSession, isSameOriginRequest } from "@/lib/reservations/auth";
 import { saveSiteContent, getSiteContent } from "@/lib/site-content/store";
+import { sendInsightPublication } from "@/lib/insights/email";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,15 @@ export async function PUT(request: Request) {
     return Response.json({ error: "Site content was not valid." }, { status: 400 });
   }
   try {
-    return Response.json({ content: await saveSiteContent((body as { content: unknown }).content) }, { headers: { "Cache-Control": "no-store" } });
+    const previous = await getSiteContent();
+    const previouslyPublished = new Set(previous.insights.articles.filter((article) => article.status === "published").map((article) => article.slug));
+    const content = await saveSiteContent((body as { content: unknown }).content);
+    const newlyPublished = content.insights.articles.filter((article) => article.status === "published" && !previouslyPublished.has(article.slug));
+    const insightNotifications = await Promise.all(newlyPublished.map(async (article) => ({
+      slug: article.slug,
+      ...(await sendInsightPublication(article, new URL(request.url).origin)),
+    })));
+    return Response.json({ content, insightNotifications }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "Site content could not be saved." }, { status: 500 });
   }

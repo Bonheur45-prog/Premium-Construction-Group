@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
-  bodyFontOptions,
   defaultHomePageContent,
-  headingFontOptions,
   type HomePageContent,
 } from "@/lib/homepage/content";
 
@@ -360,7 +358,7 @@ export function AdminHomeEditor({ embedded = false }: { embedded?: boolean } = {
             <p className="admin-kicker">Site content</p>
             <h1>Homepage<br /><em>editor.</em></h1>
           </div>
-          <p>Change each homepage section, its imagery, text, links, and the site colors and fonts. Save your changes, then preview the live page.</p>
+          <p>Change each homepage section, its imagery, text, links, and the homepage colors. Roboto Bold headings and Ubuntu paragraphs are used across the site.</p>
         </div>
 
         {status && <p className={`admin-home-status${statusIsError ? " is-error" : ""}`} role={statusIsError ? "alert" : "status"}>{status}</p>}
@@ -373,12 +371,8 @@ export function AdminHomeEditor({ embedded = false }: { embedded?: boolean } = {
           </div>
         </div>
 
-        <Panel title="Colors & fonts" subtitle="Set the homepage palette and type styles" defaultOpen>
-          <div className="admin-home-panel__intro">These settings apply across the homepage, including its header and footer. Color changes use the site's existing design palette.</div>
-          <div className="admin-home-fields">
-            <SelectField label="Body font" value={content.theme.bodyFont} onChange={(value) => updateContent((draft) => { draft.theme.bodyFont = value; })} options={bodyFontOptions} />
-            <SelectField label="Heading font" value={content.theme.headingFont} onChange={(value) => updateContent((draft) => { draft.theme.headingFont = value; })} options={headingFontOptions} />
-          </div>
+        <Panel title="Homepage colors" subtitle="Set the homepage palette" defaultOpen>
+          <div className="admin-home-panel__intro">Color changes apply to the homepage. Typography is set sitewide: Roboto Bold for headings and Ubuntu for paragraphs.</div>
           <h3 className="admin-home-subsection">Theme colors</h3>
           <div className="admin-home-color">
             {Object.entries(content.theme.colors).map(([key, value]) => (

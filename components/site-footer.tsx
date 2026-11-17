@@ -2,11 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSiteContent } from "@/lib/site-content/store";
 
-export async function SiteFooter() {
+export async function SiteFooter({ showInvitation = true }: { showInvitation?: boolean }) {
   const { brand, footer } = (await getSiteContent()).siteSettings;
   return (
     <footer className="site-footer">
-      <div className="site-footer__invitation">
+      {showInvitation && <div className="site-footer__invitation">
         <div className="shell site-footer__invitation-inner">
           <div className="site-footer__invitation-copy">
             <p className="site-footer__eyebrow"><span /> {footer.invitationEyebrow}</p>
@@ -20,7 +20,7 @@ export async function SiteFooter() {
           </div>
           <span className="site-footer__watermark" aria-hidden="true">PCG</span>
         </div>
-      </div>
+      </div>}
 
       <div className="shell site-footer__main">
         <div className="site-footer__identity">
@@ -46,7 +46,7 @@ export async function SiteFooter() {
         <nav className="site-footer__links" aria-label="Our capabilities">
           <h3>{footer.capabilitiesTitle}</h3>
           {footer.capabilityLinks.map((link) => (
-            <Link href={link.href} key={link.id}>{link.label}</Link>
+            <Link href={link.href.startsWith("/services#") ? `/services/${link.id}` : link.href} key={link.id}>{link.label}</Link>
           ))}
         </nav>
 

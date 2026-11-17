@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
+import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { getSiteContent } from "@/lib/site-content/store";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
@@ -34,9 +35,10 @@ export default async function ServicesPage() {
   return (
     <SitePageTheme>
       <SiteHeader />
+      <PageScrollProgress />
       <main id="main-content" className="services-page">
         <section className="services-hero shell" id="top" aria-labelledby="services-title">
-          <div className="services-hero__copy">
+          <ScrollReveal className="services-hero__copy">
             <p className="eyebrow"><span /> {hero.eyebrow}</p>
             <h1 id="services-title">{hero.title}<em>{hero.accent}</em></h1>
             <p className="services-hero__intro">{hero.intro}</p>
@@ -48,8 +50,8 @@ export default async function ServicesPage() {
                 {hero.secondaryLabel} <Arrow />
               </Link>
             </div>
-          </div>
-          <div className="services-hero__visual">
+          </ScrollReveal>
+          <ScrollReveal className="services-hero__visual" delay={120}>
             <Image
               src={hero.image}
               alt={hero.imageAlt}
@@ -66,17 +68,17 @@ export default async function ServicesPage() {
               <span>{hero.noteLabel}</span>
               <strong>{hero.noteText}</strong>
             </div>
-          </div>
+          </ScrollReveal>
           <div className="services-hero__index">{hero.index} <span>/ {hero.eyebrow}</span></div>
         </section>
 
         <section className="service-index" id="service-list" aria-label="Services at a glance">
           <div className="shell service-index__inner">
-            <div className="service-index__intro">
+            <ScrollReveal className="service-index__intro">
               <span>{serviceIndex.label}</span>
               <p>{serviceIndex.text}</p>
-            </div>
-            <nav className="service-index__links" aria-label="Jump to a service">
+            </ScrollReveal>
+            <ScrollReveal as="nav" className="service-index__links" delay={100} aria-label="Jump to a service">
               {services.map((service) => (
                 <Link href={`#${service.id}`} key={service.id}>
                   <span>{service.number}</span>
@@ -84,7 +86,7 @@ export default async function ServicesPage() {
                   <Arrow diagonal />
                 </Link>
               ))}
-            </nav>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -95,7 +97,7 @@ export default async function ServicesPage() {
             key={service.id}
             aria-labelledby={`${service.id}-title`}
           >
-            <div className={`shell service-detail__inner${index % 2 === 1 ? " is-reversed" : ""}`}>
+            <ScrollReveal className={`shell service-detail__inner${index % 2 === 1 ? " is-reversed" : ""}`} delay={index * 70}>
               <div className="service-detail__visual">
                 <Image
                   src={service.image}
@@ -125,37 +127,37 @@ export default async function ServicesPage() {
                     </li>
                   ))}
                 </ul>
-                <Link className="service-detail__link" href={service.actionHref}>
-                  {service.actionLabel} <Arrow diagonal />
+                <Link className="service-detail__link" href={`/services/${service.id}`}>
+                  More about {service.title.toLowerCase()} <Arrow diagonal />
                 </Link>
               </div>
-            </div>
+            </ScrollReveal>
           </section>
         ))}
 
         <section className="service-process section-pad" aria-labelledby="service-process-title">
           <div className="shell">
-            <div className="service-process__heading">
+            <ScrollReveal className="service-process__heading">
               <div>
                 <p className="section-kicker"><span>{process.kicker}</span><span className="section-kicker__rule" /></p>
                 <h2 id="service-process-title">{process.title}<br /><em>{process.accent}</em></h2>
               </div>
               <p>{process.intro}</p>
-            </div>
-            <div className="service-process__grid">
+            </ScrollReveal>
+            <ScrollReveal className="service-process__grid" delay={80}>
               {process.steps.map((step, index) => (
-                <article key={`${step.number}-${index}`}>
+                <ScrollReveal as="article" key={`${step.number}-${index}`} delay={index * 110}>
                   <span>{step.number}</span>
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
-                </article>
+                </ScrollReveal>
               ))}
-            </div>
+            </ScrollReveal>
             <p className="service-image-note">{process.imageNote}</p>
           </div>
         </section>
 
-        <section className="closing-cta shell services-cta">
+        <ScrollReveal as="section" className="closing-cta shell services-cta" delay={80}>
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>
           <div className="closing-cta__copy">
             <p className="eyebrow"><span /> {closing.eyebrow}</p>
@@ -165,7 +167,7 @@ export default async function ServicesPage() {
           <Link className="button button--dark" href={closing.href}>
             {closing.action} <Arrow diagonal />
           </Link>
-        </section>
+        </ScrollReveal>
       </main>
       <SiteFooter />
     </SitePageTheme>

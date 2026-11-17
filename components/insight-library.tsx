@@ -35,7 +35,7 @@ export function InsightLibrary({ insights }: { insights: SiteContent["insights"]
       <div className="insight-card-grid">
         {filteredInsights.map((insight, index) => (
           <article className="insight-card" key={insight.slug}>
-            <Link className="insight-card__image" href={`#${insight.slug}`} aria-label={`Read: ${insight.title}`}>
+            <Link className="insight-card__image" href={`/insights/${insight.slug}`} aria-label={`Read: ${insight.title}`}>
               <Image
                 src={insight.image}
                 alt={insight.imageAlt}
@@ -50,10 +50,10 @@ export function InsightLibrary({ insights }: { insights: SiteContent["insights"]
               <span>{insight.topic}</span>
               <span>{insight.readTime}</span>
             </div>
-            <h3><Link href={`#${insight.slug}`}>{insight.title}</Link></h3>
+            <h3><Link href={`/insights/${insight.slug}`}>{insight.title}</Link></h3>
             <p>{insight.excerpt}</p>
-            <Link className="insight-card__link" href={`#${insight.slug}`}>
-              Continue reading <span aria-hidden="true">→</span>
+            <Link className="insight-card__link" href={`/insights/${insight.slug}`}>
+              Read the full insight <span aria-hidden="true">→</span>
             </Link>
           </article>
         ))}
