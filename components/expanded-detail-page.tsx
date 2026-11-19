@@ -103,7 +103,7 @@ export function ExpandedDetailPage({
 
             <div className="expanded-detail-explanation__grid">
               {sections.map((section, sectionIndex) => (
-                <ScrollReveal as="article" key={section.title} delay={sectionIndex * 90}>
+                <ScrollReveal as="article" key={`${section.title}-${sectionIndex}`} delay={sectionIndex * 90}>
                   <span>{String(sectionIndex + 1).padStart(2, "0")}</span>
                   <h3>{section.title}</h3>
                   <p>{section.body}</p>
@@ -117,8 +117,8 @@ export function ExpandedDetailPage({
                 <h2>{kind === "service" ? "The details that help the project move." : "Start with what matters most."}</h2>
               </div>
               <ul>
-                {focus.map((item) => (
-                  <li key={item.title}><span aria-hidden="true">+</span><div><strong>{item.title}</strong><p>{item.text}</p></div></li>
+                {focus.map((item, itemIndex) => (
+                  <li key={`${item.title}-${itemIndex}`}><span aria-hidden="true">+</span><div><strong>{item.title}</strong><p>{item.text}</p></div></li>
                 ))}
               </ul>
             </ScrollReveal>

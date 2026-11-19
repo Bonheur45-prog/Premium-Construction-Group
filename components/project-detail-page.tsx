@@ -6,7 +6,9 @@ import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
-import { PROJECT_STAGES, projectParagraphs, type Project } from "@/lib/projects/store";
+import type { PublicProject } from "@/lib/cms/public";
+
+const PROJECT_STAGES: Record<PublicProject["stage"], string> = { completed: "Completed", ongoing: "In progress", upcoming: "Upcoming" };
 
 /** A single portfolio project: cover, "title block" of key facts, story, gallery and related work. */
 type ProjectPageCopy = {
@@ -14,8 +16,7 @@ type ProjectPageCopy = {
   closingEyebrow: string; closingTitle: string; closingAccent: string; closingBody: string; closingAction: string; closingHref: string;
 };
 
-export function ProjectDetailPage({ project, categoryLabel, related, sheetNumber, copy }: { project: Project; categoryLabel: string; related: ShowcaseProject[]; sheetNumber: string; copy: ProjectPageCopy }) {
-  const paragraphs = projectParagraphs(project.body);
+export function ProjectDetailPage({ project, categoryLabel, related, sheetNumber, copy }: { project: PublicProject; categoryLabel: string; related: ShowcaseProject[]; sheetNumber: string; copy: ProjectPageCopy }) {
   const sheet = [
     ["Project", project.title],
     ["Category", categoryLabel],
@@ -58,9 +59,9 @@ export function ProjectDetailPage({ project, categoryLabel, related, sheetNumber
             </footer>
           </ScrollReveal>
           <div className="project-detail__story">
-            {paragraphs.length ? paragraphs.map((paragraph, index) => (
-              <ScrollReveal key={index} as="p" delay={index * 40} className={index === 0 ? "project-detail__lead" : ""}>{paragraph}</ScrollReveal>
-            )) : <p className="project-detail__lead">{project.summary}</p>}
+            {project.bodyHtml
+              ? <div className="article-body" dangerouslySetInnerHTML={{ __html: project.bodyHtml }} />
+              : <p className="project-detail__lead">{project.summary}</p>}
           </div>
         </section>
 

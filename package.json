@@ -9,6 +9,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "@tiptap/core": "^3.34.0",
+    "@tiptap/extension-highlight": "^3.34.0",
+    "@tiptap/extension-image": "^3.34.0",
+    "@tiptap/extension-table": "^3.34.0",
+    "@tiptap/extension-text-align": "^3.34.0",
+    "@tiptap/pm": "^3.34.0",
+    "@tiptap/react": "^3.34.0",
+    "@tiptap/starter-kit": "^3.34.0",
     "next": "^16.4.0",
     "pg": "^8.23.1",
     "react": "^19.3.0",

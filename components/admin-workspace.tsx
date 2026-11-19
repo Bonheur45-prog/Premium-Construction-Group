@@ -14,11 +14,15 @@ import { RequestsBoard } from "@/components/admin/requests-board";
 import { ClientsConsole } from "@/components/admin/clients-console";
 import { ActivityLog } from "@/components/admin/activity-log";
 import { cmsFetch } from "@/components/admin/format";
-import { AdminProjectsEditor } from "@/components/admin/projects-editor";
+import { CollectionList } from "@/components/admin/cms/collection-list";
+import { EntryEditor } from "@/components/admin/cms/entry-editor";
+import { TrashList } from "@/components/admin/cms/trash";
+import { SiteSettingsEditor } from "@/components/admin/site-settings";
+import { COLLECTIONS, isCollectionId, type CollectionId } from "@/lib/cms/collections";
 import "@/app/account/portal.css";
 import "@/app/admin/cms.css";
 
-export type AdminTab = "overview" | "website" | "pages" | "projects" | "media" | "requests" | "clients" | "enquiries" | "reservations" | "users" | "activity";
+export type AdminTab = "overview" | "website" | "pages" | CollectionId | "media" | "header" | "footer" | "settings" | "trash" | "requests" | "clients" | "enquiries" | "reservations" | "users" | "activity";
 type SignedInUser = { id: string; username: string; role: "admin" | "editor" };
 type Badges = Partial<Record<AdminTab, number>>;
 
@@ -35,12 +39,26 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Content",
+    items: [
+      { id: "services", label: "Services", href: "/admin/services", hint: COLLECTIONS.services.description, icon: icon(<><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z" /></>) },
+      { id: "projects", label: "Projects", href: "/admin/projects", hint: COLLECTIONS.projects.description, icon: icon(<><path d="M3.5 20.5h17M5.5 20.5V9l6.5-4.5L18.5 9v11.5" /><path d="M9.5 20.5v-5h5v5M9.5 11.5h5" /></>) },
+      { id: "insights", label: "Blog", href: "/admin/insights", hint: COLLECTIONS.insights.description, icon: icon(<><path d="M5 19.5 6 15 16 5a2.1 2.1 0 0 1 3 3L9 18z" /><path d="M14 7l3 3M4 21h16" /></>) },
+      { id: "testimonials", label: "Testimonials", href: "/admin/testimonials", hint: COLLECTIONS.testimonials.description, icon: icon(<><path d="M4.5 5.5h15v10h-8l-4 3.5v-3.5h-3z" /><path d="M8.5 10.5h7" /></>) },
+      { id: "partners", label: "Partners & clients", href: "/admin/partners", hint: COLLECTIONS.partners.description, icon: icon(<><circle cx="8" cy="12" r="4.5" /><circle cx="16" cy="12" r="4.5" /></>) },
+      { id: "team", label: "Team", href: "/admin/team", hint: COLLECTIONS.team.description, icon: icon(<><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0m2-10.5a3.5 3.5 0 0 1 0 6.8m1 1.7a5 5 0 0 1 3 2" /></>) },
+      { id: "jobs", label: "Careers", href: "/admin/jobs", hint: COLLECTIONS.jobs.description, icon: icon(<><rect x="3.5" y="7.5" width="17" height="12" rx="2" /><path d="M9 7.5V5.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3.5 12.5h17" /></>) },
+      { id: "media", label: "Media library", href: "/admin/media", hint: "All images and videos in one place", icon: icon(<><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><circle cx="9" cy="10" r="1.8" /><path d="m4 18 5-5 3.5 3.5L15 14l5 5" /></>) },
+    ],
+  },
+  {
     label: "Website",
     items: [
       { id: "website", label: "Home page", href: "/admin/home", hint: "Hero slides, sections and colours", icon: icon(<><rect x="3.5" y="4.5" width="17" height="12" rx="2" /><path d="M8 20h8m-4-3.5V20M3.5 8h17" /></>) },
-      { id: "pages", label: "Pages & insights", href: "/admin/pages", hint: "Every page, articles, custom pages and site settings", icon: icon(<><path d="M7 3.5h7l4.5 4.5v12a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-16a.5.5 0 0 1 .5-.5Z" /><path d="M14 3.5V8h4.5M9 12h6m-6 3h6" /></>) },
-      { id: "projects", label: "Projects portfolio", href: "/admin/projects", hint: "Completed and ongoing projects with galleries", icon: icon(<><path d="M3.5 20.5h17M5.5 20.5V9l6.5-4.5L18.5 9v11.5" /><path d="M9.5 20.5v-5h5v5M9.5 11.5h5" /></>) },
-      { id: "media", label: "Media library", href: "/admin/media", hint: "All images and videos in one place", icon: icon(<><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><circle cx="9" cy="10" r="1.8" /><path d="m4 18 5-5 3.5 3.5L15 14l5 5" /></>) },
+      { id: "pages", label: "Other pages", href: "/admin/pages", hint: "About, Our approach, Contact and custom pages", icon: icon(<><path d="M7 3.5h7l4.5 4.5v12a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-16a.5.5 0 0 1 .5-.5Z" /><path d="M14 3.5V8h4.5M9 12h6m-6 3h6" /></>) },
+      { id: "header", label: "Header & menu", href: "/admin/header", hint: "Logo, menu links and the main button", icon: icon(<><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M3.5 9h17M7 6.8h4" /></>) },
+      { id: "footer", label: "Footer", href: "/admin/footer", hint: "Footer columns, links and invitation band", icon: icon(<><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><path d="M3.5 15h17M7 17.2h4" /></>) },
+      { id: "settings", label: "Site settings", href: "/admin/settings", hint: "Contact details, social media, Google and sharing", icon: icon(<><circle cx="12" cy="12" r="3" /><path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2 18 18M6 18l1.8-1.8M16.2 7.8 18 6" /></>) },
     ],
   },
   {
@@ -57,6 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "users", label: "Team & access", href: "/admin/users", hint: "CMS accounts and roles", adminOnly: true, icon: icon(<><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0m2-10.5a3.5 3.5 0 0 1 0 6.8m1 1.7a5 5 0 0 1 3 2" /></>) },
       { id: "activity", label: "Activity log", href: "/admin/activity", hint: "Who did what, and when", adminOnly: true, icon: icon(<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>) },
+      { id: "trash", label: "Trash", href: "/admin/trash", hint: "Restore anything you deleted", icon: icon(<><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" /></>) },
     ],
   },
 ];
@@ -124,7 +143,7 @@ function CommandPalette({ items, onClose }: { items: NavItem[]; onClose: () => v
   );
 }
 
-export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: AdminTab }) {
+export function AdminWorkspace({ initialTab = "overview", entryId }: { initialTab?: AdminTab; entryId?: string }) {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [authenticated, setAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<SignedInUser | null>(null);
@@ -330,7 +349,7 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
           </button>
           <div className="cms-topbar__title">
             <p className="cms-eyebrow">PCG / {activeItem?.label || "Workspace"}</p>
-            <h1>{activeTab === "overview" ? <>{greeting()}, <em>{currentUser?.username}.</em></> : activeItem?.label}</h1>
+            <h1>{activeTab === "overview" ? <>{greeting()}, <em>{currentUser?.username}.</em></> : entryId && isCollectionId(activeTab) ? `Edit ${COLLECTIONS[activeTab].singular}` : activeItem?.label}</h1>
           </div>
           <div className="cms-topbar__actions">
             <Link className="cms-btn cms-btn--ghost" href="/" target="_blank" rel="noreferrer">View website <span aria-hidden="true">↗</span></Link>
@@ -340,7 +359,9 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
           {activeTab === "overview" && <AdminOverview />}
           {activeTab === "website" && <AdminHomeEditor embedded />}
           {activeTab === "pages" && <AdminPagesEditor />}
-          {activeTab === "projects" && <AdminProjectsEditor />}
+          {isCollectionId(activeTab) && (entryId ? <EntryEditor id={entryId} /> : <CollectionList collection={activeTab} />)}
+          {(activeTab === "header" || activeTab === "footer" || activeTab === "settings") && <SiteSettingsEditor screen={activeTab} />}
+          {activeTab === "trash" && <TrashList isAdmin={currentUser?.role === "admin"} />}
           {activeTab === "media" && <AdminMediaLibrary />}
           {activeTab === "requests" && <RequestsBoard />}
           {activeTab === "clients" && <ClientsConsole isAdmin={currentUser?.role === "admin"} />}

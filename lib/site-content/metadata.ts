@@ -14,6 +14,7 @@ const managedPagePaths: Record<ManagedPageKey, string> = {
   insights: "/insights",
   contact: "/contact",
   reservations: "/reservations",
+  careers: "/careers",
 };
 
 export function getSiteOrigin(content: SiteContent): URL | null {
@@ -176,7 +177,9 @@ export function buildSiteStructuredData(content: SiteContent) {
   };
 }
 
-export function buildArticleStructuredData(content: SiteContent, article: SiteInsight) {
+export type ArticleForStructuredData = Pick<SiteInsight, "slug" | "title" | "excerpt" | "metaDescription" | "image" | "socialImage" | "publishedAt" | "updatedAt" | "author" | "canonicalUrl">;
+
+export function buildArticleStructuredData(content: SiteContent, article: ArticleForStructuredData) {
   const origin = getSiteOrigin(content);
   if (!origin) return null;
   const brand = content.siteSettings.brand;

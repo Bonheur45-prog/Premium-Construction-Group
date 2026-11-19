@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { publicOrigin } from "@/lib/server/http";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getInsights } from "@/lib/cms/public";
 
 export const runtime = "nodejs";
 
@@ -21,8 +22,8 @@ export async function GET(request: Request) {
   const content = await getSiteContent();
   const origin = content.siteSettings.seo.siteUrl || publicOrigin(request);
   const brand = content.siteSettings.brand;
-  const articles = content.insights.articles
-    .filter((article) => article.status === "published" && !article.noIndex)
+  const articles = (await getInsights())
+    .filter((article) => !article.noIndex)
     .sort((a, b) => (b.publishedAt || "").localeCompare(a.publishedAt || ""))
     .slice(0, 30);
 

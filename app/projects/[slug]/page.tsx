@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
 import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 import { ProjectDetailPage as ProjectDetailView } from "@/components/project-detail-page";
 import { ProjectShowcase } from "@/components/project-showcase";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { getProjectBySlug } from "@/lib/projects/store";
+import { getProjects, redirectOrNotFound } from "@/lib/cms/public";
 import { publicShowcase } from "@/lib/projects/public";
 
 type ProjectDetailProps = { params: Promise<{ slug: string }> };
@@ -18,13 +17,13 @@ export async function generateMetadata({ params }: ProjectDetailProps): Promise<
   const content = await getSiteContent();
   const category = content.projects.categories.find((item) => item.id === slug) || null;
   if (!category) {
-    const project = await getProjectBySlug(slug);
+    const project = (await getProjects()).find((item) => item.slug === slug);
     if (!project) return { title: "Project not found", robots: { index: false, follow: false } };
     return buildSeoMetadata(content, {
       path: `/projects/${project.slug}`,
-      title: `${project.title} | Projects`,
-      description: project.summary,
-      socialImage: project.cover,
+      title: project.seoTitle || `${project.title} | Projects`,
+      description: project.metaDescription || project.summary,
+      socialImage: project.socialImage || project.cover,
       imageAlt: project.coverAlt || project.title,
     });
   }
@@ -43,8 +42,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
   const content = await getSiteContent();
   const category = content.projects.categories.find((item) => item.id === slug);
   if (!category) {
-    const project = await getProjectBySlug(slug);
-    if (!project) notFound();
+    const project = (await getProjects()).find((item) => item.slug === slug);
+    if (!project) return redirectOrNotFound(`/projects/${slug}`);
     const labels = new Map<string, string>(content.projects.categories.map((item) => [item.id, item.type]));
     const all = await publicShowcase(content);
     const related = all.filter((item) => item.slug !== project.slug && (!project.category || item.category === project.category)).slice(0, 3);

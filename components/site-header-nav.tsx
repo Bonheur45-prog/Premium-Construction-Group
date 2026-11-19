@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { SocialIcons, type SocialLinks } from "@/components/social-icons";
+import { SocialIcons, type SocialLink } from "@/components/social-icons";
 
 type HeaderSettings = {
   brand: { legalName: string; primaryName: string; secondaryName: string; logo: string; strapline: string };
   header: { links: Array<{ id: string; label: string; href: string; enabled: boolean }>; ctaLabel: string; ctaHref: string };
-  social: SocialLinks;
+  socialLinks: SocialLink[];
 };
 
 export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
@@ -56,7 +56,7 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
             </span>
           </Link>
 
-          <SocialIcons className="social-icons--mobile" links={settings.social} />
+          <SocialIcons className="social-icons--mobile" links={settings.socialLinks} />
 
           <button
             className={`menu-toggle${open ? " is-open" : ""}`}
@@ -85,7 +85,7 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
                 {link.label}
               </Link>
             ))}
-            <SocialIcons className="social-icons--nav" links={settings.social} />
+            <SocialIcons className="social-icons--nav" links={settings.socialLinks} />
             <Link
               className="button button--small button--nav"
               href={settings.header.ctaHref}
