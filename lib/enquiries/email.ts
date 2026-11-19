@@ -29,6 +29,8 @@ export async function sendEnquiryNotifications(enquiry: Enquiry, origin: string)
     { type: "paragraph", text: `Hello ${enquiry.name.split(" ")[0]},` },
     { type: "paragraph", text: "Thank you for getting in touch. We have received your enquiry and a member of our team will reply within two working days." },
     { type: "quote", label: "What you sent us", text: enquiry.message },
+    { type: "paragraph", text: "Want to follow your project in one place? Create a free client account to see updates, message our team and share plans and documents." },
+    { type: "button", label: "Create your client account", href: `${origin}/account/signup?email=${encodeURIComponent(enquiry.email)}` },
     { type: "note", text: "If you didn't send this enquiry, you can ignore this email." },
   ];
   const [staff, sender] = await Promise.all([

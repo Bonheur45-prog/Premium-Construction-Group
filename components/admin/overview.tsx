@@ -59,10 +59,11 @@ export function AdminOverview() {
     <div className="cms-overview">
       <section className="cms-stats" aria-label="Key numbers">
         <Stat label="New enquiries" value={stats.newEnquiries} note={stats.newEnquiries ? "Waiting to be read" : "Inbox is clear"} href="/admin/enquiries" tone="amber" />
-        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" tone="teal" />
+        <Stat label="Awaiting our reply" value={stats.awaitingReply} note={`${stats.openRequests} open request${stats.openRequests === 1 ? "" : "s"}`} href="/admin/requests" tone="teal" />
+        <Stat label="Client accounts" value={stats.clients} note={stats.newClients30 ? `${stats.newClients30} joined this month` : "Portal sign-ups"} href="/admin/clients" />
+        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" />
         <Stat label="Media files" value={stats.mediaFiles} note={formatBytes(stats.mediaBytes)} href="/admin/media" />
         <Stat label="Published insights" value={stats.publishedArticles} note={stats.draftArticles ? `${stats.draftArticles} draft${stats.draftArticles === 1 ? "" : "s"} waiting` : "No drafts waiting"} href="/admin/pages" />
-        <Stat label="Custom pages" value={stats.customPages} note="Beyond the standard pages" href="/admin/pages" />
       </section>
 
       <div className="cms-overview__grid">

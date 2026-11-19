@@ -2651,3 +2651,8 @@ p { font-family: var(--font-ubuntu), "Ubuntu", sans-serif !important; }
 .project-gallery-grid button, .project-gallery-grid li.is-wide button { height: 100%; aspect-ratio: auto; }
 .project-gallery-grid p { position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 26px 14px 12px 60px; background: linear-gradient(transparent, rgba(8,22,30,.78)); color: rgba(255,255,255,.88); pointer-events: none; }
 @media (max-width: 640px) { .project-gallery-grid { grid-auto-rows: 240px; } }
+/* Top line: link to the client portal */
+.topline__right { display: inline-flex; align-items: center; gap: 22px; }
+.topline__portal { color: var(--amber); font-weight: 700; letter-spacing: .12em; }
+.topline__portal:hover { color: #fff; }
+@media (max-width: 760px) { .topline__note { display: none; } }
