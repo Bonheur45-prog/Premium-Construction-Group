@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
-import { projectDetailCopy } from "@/lib/site-content/expanded-details";
 import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 import { ProjectDetailPage as ProjectDetailView } from "@/components/project-detail-page";
@@ -50,11 +49,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
     const all = await publicShowcase(content);
     const related = all.filter((item) => item.slug !== project.slug && (!project.category || item.category === project.category)).slice(0, 3);
     const position = all.findIndex((item) => item.slug === project.slug);
-    return <ProjectDetailView project={project} categoryLabel={labels.get(project.category) || ""} related={related} sheetNumber={`PCG-P-${String(Math.max(position, 0) + 1).padStart(2, "0")}`} />;
+    return <ProjectDetailView project={project} categoryLabel={labels.get(project.category) || ""} related={related} sheetNumber={`PCG-P-${String(Math.max(position, 0) + 1).padStart(2, "0")}`} copy={content.detailPages.projectPage} />;
   }
   const categoryProjects = await publicShowcase(content, (project) => project.category === category.id);
 
-  const copy = projectDetailCopy[category.id];
+  const copy = content.detailPages.projectCategories[category.id];
   const sections = copy?.sections ?? [
     { title: "Start with the purpose", body: `Every ${category.type.toLowerCase()} brief begins with the people it is intended to serve and the role the place needs to play.` },
     { title: "Shape a practical response", body: "Bring the important requirements, site conditions, and design choices into a clear conversation before work moves ahead." },
@@ -84,6 +83,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
       sections={sections}
       focus={focus}
       related={related}
+      closing={content.detailPages.closing}
     >
       {categoryProjects.length > 0 && (
         <section className="section-pad project-category-work" aria-labelledby="category-work-title">

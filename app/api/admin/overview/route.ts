@@ -40,6 +40,11 @@ export async function GET(request: Request) {
       count("SELECT COUNT(*)::text AS count FROM pcg_clients WHERE created_at > NOW() - INTERVAL '30 days'"),
     ]);
 
+    const waiting = postgresEnabled() ? (await pgQuery(
+      `SELECT ref, title, contact_name, status, last_client_activity_at FROM pcg_requests
+       WHERE last_client_activity_at IS NOT NULL AND (staff_last_seen_at IS NULL OR last_client_activity_at > staff_last_seen_at) AND status <> 'closed'
+       ORDER BY last_client_activity_at ASC LIMIT 5`,
+    ).catch(() => ({ rows: [] }))).rows.map((row) => ({ ref: String(row.ref), title: String(row.title), name: String(row.contact_name), status: String(row.status), since: new Date(row.last_client_activity_at).toISOString() })) : [];
     const settings = content.siteSettings;
     const articles = content.insights.articles;
     const setup = [
@@ -69,6 +74,7 @@ export async function GET(request: Request) {
         draftArticles: articles.filter((article) => article.status === "draft").length,
         customPages: content.customPages.length,
       },
+      waiting,
       upcoming: upcoming.slice(0, 5).map(({ id, name, projectType, date, time, company }) => ({ id, name, projectType, date, time, company })),
       activity,
       setup,

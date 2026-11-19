@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MediaPicker } from "@/components/admin/media-library";
 import { customSitePageTemplate, defaultSiteContent, type SiteContent, type SiteInsight } from "@/lib/site-content/content";
 
-type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact" | "reservations" | "siteSettings" | "custom-pages";
+type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact" | "reservations" | "detailPages" | "siteSettings" | "custom-pages";
 type FeedItem = { title: string; link: string; summary: string; publishedAt: string; image: string };
 type FeedResult = { url: string; title: string; items: FeedItem[]; error?: string };
 
@@ -16,6 +16,7 @@ const pageLabels: { id: SitePage; label: string; hint: string }[] = [
   { id: "insights", label: "Insights", hint: "Write articles, optimize search previews, and manage publication" },
   { id: "contact", label: "Contact", hint: "Enquiry and meeting reservation page copy" },
   { id: "reservations", label: "Reservations", hint: "Booking page copy, opening hours, and meeting availability" },
+  { id: "detailPages", label: "Detail pages", hint: "Service and project-category detail pages, closing message, and project page wording" },
   { id: "siteSettings", label: "Site settings", hint: "Brand, navigation, footer, search previews, crawl controls, and verification" },
   { id: "custom-pages", label: "Custom pages", hint: "Create and publish additional website pages" },
 ];

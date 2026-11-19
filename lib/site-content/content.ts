@@ -1,3 +1,4 @@
+import { projectDetailCopy, serviceDetailCopy } from "@/lib/site-content/expanded-details";
 import { insights as starterInsights } from "@/lib/insights";
 import { projectCategories } from "@/lib/project-categories";
 
@@ -46,6 +47,8 @@ export const customSitePageTemplate: CustomSitePage = {
   sections: [{ title: "A new section", body: "Add the content for this section." }],
   closing: { title: "Let's talk.", body: "Tell us what you have in mind.", action: "Start a conversation", href: "/contact" },
 };
+
+const cloneCopy = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 export const defaultSiteContent = {
   about: {
@@ -421,6 +424,33 @@ export const defaultSiteContent = {
       contactHref: "/contact",
       bottomTagline: "Considered construction. Enduring value.",
       backToTopLabel: "Back to top",
+    },
+  },
+  detailPages: {
+    services: cloneCopy(serviceDetailCopy),
+    projectCategories: cloneCopy(projectDetailCopy),
+    closing: {
+      eyebrow: "A considered next step",
+      title: "Have a project",
+      accent: "in mind?",
+      body: "Tell us what you are planning. We can start with the purpose, the people, and the questions in front of you.",
+      action: "Start a conversation",
+      href: "/contact",
+    },
+    projectPage: {
+      sheetTitle: "Project data sheet",
+      sheetAction: "Start a similar project",
+      sheetHref: "/contact",
+      galleryKicker: "On site",
+      galleryTitle: "Inside the",
+      galleryAccent: "project.",
+      relatedKicker: "Keep exploring",
+      closingEyebrow: "Your project next",
+      closingTitle: "Planning something",
+      closingAccent: "like this?",
+      closingBody: "Tell us about the place you want to build. We'll start with the purpose, the people and the questions in front of you.",
+      closingAction: "Start a conversation",
+      closingHref: "/contact",
     },
   },
   customPages: [] as CustomSitePage[],

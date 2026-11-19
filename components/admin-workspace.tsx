@@ -12,12 +12,13 @@ import { AdminMediaLibrary } from "@/components/admin/media-library";
 import { EnquiriesInbox, type EnquiryRecord } from "@/components/admin/enquiries-inbox";
 import { RequestsBoard } from "@/components/admin/requests-board";
 import { ClientsConsole } from "@/components/admin/clients-console";
+import { ActivityLog } from "@/components/admin/activity-log";
 import { cmsFetch } from "@/components/admin/format";
 import { AdminProjectsEditor } from "@/components/admin/projects-editor";
 import "@/app/account/portal.css";
 import "@/app/admin/cms.css";
 
-export type AdminTab = "overview" | "website" | "pages" | "projects" | "media" | "requests" | "clients" | "enquiries" | "reservations" | "users";
+export type AdminTab = "overview" | "website" | "pages" | "projects" | "media" | "requests" | "clients" | "enquiries" | "reservations" | "users" | "activity";
 type SignedInUser = { id: string; username: string; role: "admin" | "editor" };
 type Badges = Partial<Record<AdminTab, number>>;
 
@@ -55,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Administration",
     items: [
       { id: "users", label: "Team & access", href: "/admin/users", hint: "CMS accounts and roles", adminOnly: true, icon: icon(<><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0m2-10.5a3.5 3.5 0 0 1 0 6.8m1 1.7a5 5 0 0 1 3 2" /></>) },
+      { id: "activity", label: "Activity log", href: "/admin/activity", hint: "Who did what, and when", adminOnly: true, icon: icon(<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>) },
     ],
   },
 ];
@@ -137,7 +139,7 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
 
   useEffect(() => setActiveTab(initialTab), [initialTab]);
   useEffect(() => {
-    if (activeTab === "users" && currentUser && currentUser.role !== "admin") setActiveTab("overview");
+    if ((activeTab === "users" || activeTab === "activity") && currentUser && currentUser.role !== "admin") setActiveTab("overview");
   }, [activeTab, currentUser]);
 
   const visibleGroups = useMemo(
@@ -345,6 +347,7 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
           {activeTab === "enquiries" && <EnquiriesInbox onConvert={openRequestFromEnquiry} />}
           {activeTab === "reservations" && <AdminReservationsConsole embedded />}
           {activeTab === "users" && currentUser?.role === "admin" && <AdminUsersConsole />}
+          {activeTab === "activity" && currentUser?.role === "admin" && <ActivityLog />}
         </div>
       </div>
       {paletteOpen && <CommandPalette items={flatItems} onClose={() => setPaletteOpen(false)} />}
