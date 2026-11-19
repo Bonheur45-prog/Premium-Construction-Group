@@ -4,19 +4,16 @@ import { adminConfigurationReady } from "@/lib/reservations/auth";
 import { getReservationSettings } from "@/lib/reservations/settings";
 import { formatReservationDateTime } from "@/lib/reservations/availability";
 import type { Reservation } from "@/lib/reservations/types";
-import { emailConfigured, sendEmail, staffNotifyEmail } from "@/lib/email/send";
+import { sendEmail, staffNotifyEmail } from "@/lib/email/send";
 
 type Delivery = { customer: boolean; admin: boolean };
 
 export async function reservationSystemConfigured() {
   const settings = await getReservationSettings();
   const adminReady = await adminConfigurationReady();
-  return Boolean(
-    settings.enabled &&
-    emailConfigured() &&
-      staffNotifyEmail() &&
-      adminReady,
-  );
+  // Bookings are saved and shown in CMS → Meetings even before email is set up, so the form works
+  // from day one. Confirmation emails start going out automatically once Brevo is configured.
+  return Boolean(settings.enabled && adminReady);
 }
 
 function escapeHtml(value: string) {

@@ -289,7 +289,7 @@ export const defaultSiteContent = {
     reservation: {
       kicker: "Reserve a meeting", title: "Make time for", accent: "your next step.",
       intro: "Choose a time to meet with a Premium Construction Group expert. We'll send a confirmation as soon as your reservation is saved.",
-      duration: "60", durationLabel: "minutes", daysLabel: "Weekdays", timezone: "SAST", jumpLabel: "Choose a meeting time", step: "01 / Schedule", cardTitle: "Book a conversation.",
+      duration: "60", durationLabel: "minutes", daysLabel: "Weekdays", timezone: "CAT", jumpLabel: "Choose a meeting time", step: "01 / Schedule", cardTitle: "Book a conversation.",
     },
   },
   reservations: {
@@ -313,10 +313,10 @@ export const defaultSiteContent = {
       kicker: "Choose a time",
       title: "Let's talk about",
       accent: "what you are planning.",
-      intro: "Select an available weekday and time. Your meeting is one hour and takes place in South Africa Standard Time.",
+      intro: "Select an available weekday and time. Your meeting is one hour, and times are shown in Kigali time (CAT).",
       duration: 60,
       durationLabel: "minutes",
-      timezone: "SAST",
+      timezone: "CAT",
       jumpLabel: "Go to booking form",
       step: "01 / Schedule",
       cardTitle: "Book a conversation.",
@@ -596,5 +596,20 @@ export function normalizeSiteContent(value: unknown): SiteContent {
   }
   socialLinks = socialLinks.filter((link) => link.platform && link.url).slice(0, 12);
 
-  return { ...normalized, siteSettings: { ...normalized.siteSettings, socialLinks }, insights: { ...normalized.insights, articles }, customPages };
+  // The company is in Rwanda: older saved content labelled meeting times as South African (SAST).
+  // Kigali has the same UTC+2 offset, so only the wording changes.
+  const booking = { ...normalized.reservations.booking };
+  if (booking.timezone === "SAST") booking.timezone = "CAT";
+  booking.intro = booking.intro.replace("takes place in South Africa Standard Time.", "times are shown in Kigali time (CAT).").replace("is one hour and times", "is one hour, and times");
+  const contactReservation = { ...normalized.contact.reservation };
+  if (contactReservation.timezone === "SAST") contactReservation.timezone = "CAT";
+
+  return {
+    ...normalized,
+    siteSettings: { ...normalized.siteSettings, socialLinks },
+    insights: { ...normalized.insights, articles },
+    reservations: { ...normalized.reservations, booking },
+    contact: { ...normalized.contact, reservation: contactReservation },
+    customPages,
+  };
 }
