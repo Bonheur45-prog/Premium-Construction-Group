@@ -356,6 +356,25 @@ export const defaultSiteContent = {
       ctaLabel: "Reserve a meeting",
       ctaHref: "/reservations",
     },
+    contact: {
+      email: "", // TODO: company email shown on the site, e.g. hello@premiumconstruction.rw
+      phone: "", // TODO: main phone number, e.g. +250 7XX XXX XXX
+      whatsapp: "", // TODO: WhatsApp number in international format, digits only, e.g. 2507XXXXXXXX
+      address: "", // TODO: office address
+      mapUrl: "",
+      openingHours: "Monday to Friday, 8:00 to 17:00",
+    },
+    social: {
+      instagram: "",
+      facebook: "",
+      linkedin: "",
+      x: "",
+      youtube: "",
+      tiktok: "",
+    },
+    analytics: {
+      googleAnalyticsId: "",
+    },
     seo: {
       siteUrl: "",
       titleTemplate: "%s | Premium Construction Group",
@@ -444,6 +463,11 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
         return template;
       }
     }
+    if (path.startsWith("siteSettings.social.")) return !cleaned || /^https:\/\/[^\s]+$/i.test(cleaned) ? cleaned.slice(0, 300) : template;
+    if (path === "siteSettings.contact.email") return !cleaned || /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(cleaned) ? cleaned.slice(0, 254) : template;
+    if (path === "siteSettings.contact.phone") return cleaned.replace(/[^\d+()\s-]/g, "").slice(0, 30);
+    if (path === "siteSettings.contact.whatsapp") return cleaned.replace(/\D/g, "").slice(0, 15);
+    if (path === "siteSettings.analytics.googleAnalyticsId") return !cleaned || /^G-[A-Z0-9]{4,20}$/i.test(cleaned) ? cleaned.toUpperCase() : template;
     if (path.endsWith(".seoTitle")) return cleaned.slice(0, 70);
     if (path.endsWith(".metaDescription") || (path.startsWith("siteSettings.seo.pages.") && path.endsWith(".description"))) return cleaned.slice(0, 320);
     if (path.endsWith(".twitterHandle")) return cleaned.replace(/[^a-z0-9_@]/gi, "").slice(0, 16);

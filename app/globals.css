@@ -2529,3 +2529,11 @@ p { font-family: var(--font-ubuntu), "Ubuntu", sans-serif !important; }
   .admin-article-seo__body { padding: 13px; }
   .admin-rss-panel__summary { align-items: flex-start; }
 }
+
+/* Footer contact details and client-portal link (CMS → Site settings → Contact) */
+.site-footer__details { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: rgba(255,255,255,.72); }
+.site-footer__details a { color: inherit; border-bottom: 1px solid rgba(255,255,255,.18); transition: color .2s ease, border-color .2s ease; }
+.site-footer__details a:hover { color: var(--amber); border-color: var(--amber); }
+.site-footer__hours { color: rgba(255,255,255,.5); font-size: 12px; letter-spacing: .04em; }
+.site-footer__portal-link { display: inline-flex; gap: 8px; margin-top: 22px; padding: 10px 14px; border: 1px solid rgba(239,169,79,.45); color: var(--amber); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; transition: background .2s ease, color .2s ease; }
+.site-footer__portal-link:hover { background: var(--amber); color: var(--night-deep); }

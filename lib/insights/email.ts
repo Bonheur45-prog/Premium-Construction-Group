@@ -1,7 +1,7 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
 import type { SiteInsight } from "@/lib/site-content/content";
+import { emailConfigured, sendEmail } from "@/lib/email/send";
 import { createInsightUnsubscribeToken, getActiveInsightSubscribers, insightEmailDeliveryConfigured } from "@/lib/insights/subscribers";
 
 function escapeHtml(value: string) {
@@ -19,9 +19,7 @@ function emailFrame(title: string, body: string) {
 }
 
 export async function sendInsightPublication(article: SiteInsight, origin: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESERVATION_FROM_EMAIL;
-  if (!apiKey || !from || !insightEmailDeliveryConfigured()) return { enabled: false, total: 0, sent: 0 };
+  if (!emailConfigured() || !insightEmailDeliveryConfigured()) return { enabled: false, total: 0, sent: 0 };
 
   const subscribers = await getActiveInsightSubscribers();
   const results: boolean[] = [];
@@ -35,28 +33,13 @@ export async function sendInsightPublication(article: SiteInsight, origin: strin
       unsubscribeUrl.searchParams.set("token", token);
       const articleUrl = new URL(`/insights/${encodeURIComponent(article.slug)}`, origin).toString();
       const body = `<p style="color:#49616a;font-size:15px;line-height:1.8">A new perspective from Premium Construction Group is ready to read.</p><p style="color:#49616a;font-size:15px;line-height:1.8">${escapeHtml(article.excerpt)}</p><p style="margin:25px 0"><a href="${escapeHtml(articleUrl)}" style="display:inline-block;padding:14px 19px;background:#102d3d;color:#fffefa;text-decoration:none;font-size:13px;font-weight:bold">Read the insight ↗</a></p><p style="color:#6e7c80;font-size:12px;line-height:1.7">You received this email because you subscribed to PCG insights. <a href="${escapeHtml(unsubscribeUrl.toString())}" style="color:#1b5b7c">Unsubscribe from future updates</a>.</p>`;
-      const idempotencyKey = createHash("sha256").update(`${article.slug}:${subscriber.email}`).digest("hex");
-      try {
-        const response = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "Idempotency-Key": `pcg-insight-${idempotencyKey}`,
-          },
-          body: JSON.stringify({
-            from,
-            to: [subscriber.email],
-            subject: `New PCG insight: ${article.title}`,
-            text: `A new perspective from Premium Construction Group is ready to read.\n\n${article.title}\n\n${article.excerpt}\n\nRead the insight: ${articleUrl}\n\nUnsubscribe from future updates: ${unsubscribeUrl.toString()}`,
-            html: emailFrame(article.title, body),
-          }),
-          cache: "no-store",
-        });
-        return response.ok;
-      } catch {
-        return false;
-      }
+      return sendEmail({
+        to: subscriber.email,
+        subject: `New PCG insight: ${article.title}`,
+        text: `A new perspective from Premium Construction Group is ready to read.\n\n${article.title}\n\n${article.excerpt}\n\nRead the insight: ${articleUrl}\n\nUnsubscribe from future updates: ${unsubscribeUrl.toString()}`,
+        html: emailFrame(article.title, body),
+        tags: ["insight"],
+      });
     })));
   }
   return { enabled: true, total: subscribers.length, sent: results.filter(Boolean).length };

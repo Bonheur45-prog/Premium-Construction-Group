@@ -1,6 +1,7 @@
 import "server-only";
 
 import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+import { EXTRA_SCHEMA } from "@/lib/db/schema";
 
 const globalForPostgres = globalThis as typeof globalThis & {
   pcgPool?: Pool;
@@ -81,7 +82,7 @@ export async function ensurePostgresSchema() {
         subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         unsubscribed_at TIMESTAMPTZ
       );
-    `).then(() => undefined).catch((error) => {
+    ` + EXTRA_SCHEMA).then(() => undefined).catch((error) => {
       globalForPostgres.pcgSchemaPromise = undefined;
       throw error;
     });

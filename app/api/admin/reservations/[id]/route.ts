@@ -1,3 +1,4 @@
+import { publicOrigin } from "@/lib/server/http";
 import { hasValidAdminSession, isSameOriginRequest } from "@/lib/reservations/auth";
 import { isBookableReservationTime } from "@/lib/reservations/availability";
 import { sendReservationCancelled, sendReservationRescheduled } from "@/lib/reservations/email";
@@ -26,7 +27,7 @@ export async function POST(request: Request, context: RouteContext) {
   const reservation = await getReservation(id);
   if (!reservation) return Response.json({ error: "This reservation could not be found." }, { status: 404 });
 
-  const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
+  const adminUrl = `${publicOrigin(request)}/admin/reservations`;
   const delivery = reservation.status === "confirmed"
     ? await sendReservationConfirmation(reservation, adminUrl)
     : await sendReservationCancelled(reservation, adminUrl);
@@ -77,7 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return Response.json({ reservation: updated, unchanged: true });
     }
 
-    const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
+    const adminUrl = `${publicOrigin(request)}/admin/reservations`;
     const delivery = await sendReservationRescheduled(previous, updated, adminUrl);
     await setReservationEmailStatus(id, delivery.customer, delivery.admin);
     return Response.json({ reservation: { ...updated, customerEmailSent: delivery.customer, adminEmailSent: delivery.admin }, notifications: delivery });
@@ -106,7 +107,7 @@ export async function DELETE(request: Request, context: RouteContext) {
 
   const cancelled = await cancelReservation(id);
   if (!cancelled) return Response.json({ error: "This reservation could not be cancelled." }, { status: 409 });
-  const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
+  const adminUrl = `${publicOrigin(request)}/admin/reservations`;
   const delivery = await sendReservationCancelled(cancelled, adminUrl);
   await setReservationEmailStatus(id, delivery.customer, delivery.admin);
   return Response.json({ reservation: { ...cancelled, status: "cancelled", customerEmailSent: delivery.customer, adminEmailSent: delivery.admin }, notifications: delivery });

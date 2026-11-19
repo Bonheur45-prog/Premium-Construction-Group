@@ -1,3 +1,5 @@
+import { getAdminSessionUserFromRequest } from "@/lib/reservations/auth";
+import { logActivity } from "@/lib/server/activity";
 import { hasValidAdminSession, isSameOriginRequest } from "@/lib/reservations/auth";
 import { getHomePageContent, saveHomePageContent } from "@/lib/homepage/store";
 
@@ -49,6 +51,8 @@ export async function PUT(request: Request) {
 
   try {
     const content = await saveHomePageContent(contentValue);
+    const editor = await getAdminSessionUserFromRequest(request);
+    if (editor) await logActivity({ type: "staff", id: editor.id, name: editor.username }, "page.update", "updated the home page", { type: "page", id: "home" });
     return Response.json({ content }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "Homepage changes could not be saved." }, { status: 500 });

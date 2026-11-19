@@ -4,7 +4,7 @@ import { SocialIcons } from "@/components/social-icons";
 import { getSiteContent } from "@/lib/site-content/store";
 
 export async function SiteFooter({ showInvitation = true }: { showInvitation?: boolean }) {
-  const { brand, footer } = (await getSiteContent()).siteSettings;
+  const { brand, footer, social, contact } = (await getSiteContent()).siteSettings;
   return (
     <footer className="site-footer">
       {showInvitation && <div className="site-footer__invitation">
@@ -35,7 +35,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
             </span>
           </Link>
           <p className="site-footer__description">{brand.footerDescription}</p>
-          <SocialIcons className="social-icons--footer" />
+          <SocialIcons className="social-icons--footer" links={social} />
         </div>
 
         <nav className="site-footer__links" aria-label="Explore Premium Construction Group">
@@ -58,6 +58,14 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
           <Link href={footer.contactHref} className="site-footer__contact-link">
             {footer.contactAction} <span aria-hidden="true">↗</span>
           </Link>
+          {(contact.email || contact.phone || contact.address) && (
+            <ul className="site-footer__details">
+              {contact.phone && <li><a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}>{contact.phone}</a></li>}
+              {contact.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
+              {contact.address && <li>{contact.mapUrl ? <a href={contact.mapUrl} target="_blank" rel="noopener noreferrer">{contact.address}</a> : contact.address}</li>}
+              {contact.openingHours && <li className="site-footer__hours">{contact.openingHours}</li>}
+            </ul>
+          )}
         </div>
       </div>
 

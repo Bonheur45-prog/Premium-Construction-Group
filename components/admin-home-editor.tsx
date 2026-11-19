@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { MediaPicker } from "@/components/admin/media-library";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   defaultHomePageContent,
@@ -73,6 +74,7 @@ function MediaField({
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [picking, setPicking] = useState(false);
   const isVideoPreview = kind === "video";
   const accept = kind === "video"
     ? "video/mp4,video/webm"
@@ -104,6 +106,7 @@ function MediaField({
       <div className="admin-home-media">
         <input aria-label={`${label} URL`} type="text" inputMode="url" value={value} onChange={(event) => onChange(event.target.value)} placeholder="Paste a media URL or upload a file" />
         <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? "Uploading…" : "Upload file"}</button>
+        <button type="button" onClick={() => setPicking(true)}>Library</button>
         <input
           ref={fileRef}
           type="file"
@@ -116,6 +119,7 @@ function MediaField({
         />
       </div>
       <small>Images: JPG, PNG, WebP, AVIF, or GIF up to 20 MB. Videos: MP4 or WebM up to 200 MB.</small>
+      {picking && <MediaPicker kind={kind === "either" ? "" : kind} onClose={() => setPicking(false)} onSelect={(item) => { onChange(item.url, item.kind); onError(""); setPicking(false); }} />}
       {value && (
         isVideoPreview
           ? <video className="admin-home-media-preview" src={value} controls muted />
