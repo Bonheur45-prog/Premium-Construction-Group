@@ -27,6 +27,8 @@ type ExpandedDetailPageProps = {
   related: RelatedDetail[];
   /** Extra content shown before "Keep exploring" (e.g. the projects in a category). */
   children?: React.ReactNode;
+  /** Closing call to action, edited in CMS → Pages → Detail pages. */
+  closing?: { eyebrow: string; title: string; accent: string; body: string; action: string; href: string };
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -51,6 +53,7 @@ export function ExpandedDetailPage({
   focus,
   related,
   children,
+  closing = { eyebrow: "A considered next step", title: "Have a project", accent: "in mind?", body: "Tell us what you are planning. We can start with the purpose, the people, and the questions in front of you.", action: "Start a conversation", href: "/contact" },
 }: ExpandedDetailPageProps) {
   const collectionHref = kind === "service" ? "/services" : "/projects";
   const collectionLabel = kind === "service" ? "Services" : "Projects";
@@ -151,11 +154,11 @@ export function ExpandedDetailPage({
         <ScrollReveal as="section" className="closing-cta shell expanded-detail-cta" delay={80}>
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>
           <div className="closing-cta__copy">
-            <p className="eyebrow"><span /> A considered next step</p>
-            <h2>Have a project<br />in mind?</h2>
-            <p>Tell us what you are planning. We can start with the purpose, the people, and the questions in front of you.</p>
+            <p className="eyebrow"><span /> {closing.eyebrow}</p>
+            <h2>{closing.title}<br />{closing.accent}</h2>
+            <p>{closing.body}</p>
           </div>
-          <Link className="button button--dark" href="/contact">Start a conversation <Arrow diagonal /></Link>
+          <Link className="button button--dark" href={closing.href}>{closing.action} <Arrow diagonal /></Link>
         </ScrollReveal>
       </main>
       <SiteFooter />

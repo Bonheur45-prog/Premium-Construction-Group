@@ -29,6 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const turnstileKey = turnstileSiteKey();
   // Public Turnstile site key for the browser widget (read at request time, so no rebuild is needed to change it).
   if (turnstileKey) metadata.other = { ...(metadata.other || {}), "pcg-turnstile": turnstileKey };
+  // Lets feed readers and automations (e.g. Zapier → LinkedIn) discover the insights feed.
+  metadata.alternates = { ...(metadata.alternates || {}), types: { "application/rss+xml": [{ url: "/insights/feed.xml", title: "Insights" }] } };
   return metadata;
 }
 

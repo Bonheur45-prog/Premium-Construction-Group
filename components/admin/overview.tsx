@@ -10,6 +10,7 @@ type Overview = {
     mediaFiles: number; mediaBytes: number; publishedArticles: number; draftArticles: number; customPages: number;
   };
   upcoming: Array<{ id: string; name: string; projectType: string; date: string; time: string; company: string }>;
+  waiting: Array<{ ref: string; title: string; name: string; status: string; since: string }>;
   activity: Array<{ id: string; actorType: string; actorName: string; action: string; summary: string; createdAt: string }>;
   setup: Array<{ id: string; label: string; done: boolean; hint: string }>;
 };
@@ -67,6 +68,26 @@ export function AdminOverview() {
       </section>
 
       <div className="cms-overview__grid">
+        {data.waiting.length > 0 && (
+          <section className="cms-card cms-card--wide cms-waiting">
+            <header className="cms-card__head">
+              <div><p className="cms-eyebrow">Clients waiting on us</p><h2>Needs a reply</h2></div>
+              <Link className="cms-link" href="/admin/requests">Open requests →</Link>
+            </header>
+            <ul>
+              {data.waiting.map((item) => (
+                <li key={item.ref}>
+                  <Link href={`/admin/requests?open=${item.ref}`}>
+                    <span className="cms-ref">{item.ref}</span>
+                    <strong>{item.title}</strong>
+                    <span>{item.name}</span>
+                    <time dateTime={item.since}>waiting {timeAgo(item.since).replace(" ago", "")}</time>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="cms-card cms-card--marks">
           <header className="cms-card__head">
             <div><p className="cms-eyebrow">Next up</p><h2>Upcoming meetings</h2></div>

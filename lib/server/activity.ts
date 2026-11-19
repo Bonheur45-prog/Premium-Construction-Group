@@ -47,3 +47,21 @@ export async function recentActivity(limit = 20): Promise<ActivityEntry[]> {
     createdAt: new Date(row.created_at).toISOString(),
   }));
 }
+
+/** Paged activity log for CMS → Activity (filter by who: staff, client, visitor). */
+export async function activityPage({ actorType, offset = 0, limit = 50 }: { actorType?: string; offset?: number; limit?: number }) {
+  if (!postgresEnabled()) return { items: [] as ActivityEntry[], total: 0 };
+  const values: unknown[] = [];
+  let where = "";
+  if (actorType && ["staff", "client", "visitor", "system"].includes(actorType)) { values.push(actorType); where = "WHERE actor_type = $1"; }
+  const total = await pgQuery<{ count: string }>(`SELECT COUNT(*)::text AS count FROM pcg_activity ${where}`, values);
+  values.push(Math.min(Math.max(limit, 1), 100), Math.max(offset, 0));
+  const rows = await pgQuery(`SELECT id, actor_type, actor_name, action, target_type, target_id, summary, created_at FROM pcg_activity ${where} ORDER BY created_at DESC LIMIT $${values.length - 1} OFFSET $${values.length}`, values);
+  return {
+    total: Number(total.rows[0]?.count || 0),
+    items: rows.rows.map((row) => ({
+      id: String(row.id), actorType: row.actor_type, actorName: row.actor_name, action: row.action,
+      targetType: row.target_type, targetId: row.target_id, summary: row.summary, createdAt: new Date(row.created_at).toISOString(),
+    })) as ActivityEntry[],
+  };
+}

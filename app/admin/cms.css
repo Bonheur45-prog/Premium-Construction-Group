@@ -487,3 +487,16 @@ a.cms-stat:hover .cms-stat__go { color: var(--c-amber); transform: translateX(3p
 .cms-drawer__requests a:hover { border-color: var(--c-amber); }
 .cms-drawer__actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 12px; }
 @media (min-width: 901px) { .cms-overview .cms-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cms-feed__day { display: block !important; margin: 14px 0 2px; padding: 0 !important; color: var(--c-amber); font: 600 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.cms-feed__day::before { display: none; }
+.cms-feed__day + li::before { display: none; }
+.cms-waiting { border-left: 3px solid var(--c-amber); }
+.cms-waiting ul { list-style: none; margin: 0; padding: 0; display: grid; }
+.cms-waiting ul a { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 11px 6px; border-top: 1px solid var(--c-line); font-size: 14px; }
+.cms-waiting li:first-child a { border-top: 0; }
+.cms-waiting ul a:hover { background: var(--c-amber-soft); }
+.cms-waiting strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cms-waiting ul a > span:nth-child(3) { color: var(--c-soft); }
+.cms-waiting time { color: #b06e17; font: 600 11px var(--mono); }
+@media (max-width: 700px) { .cms-waiting ul a { grid-template-columns: 1fr; gap: 2px; } }
+.cms-activity .cms-feed { padding: 10px 22px 18px; }

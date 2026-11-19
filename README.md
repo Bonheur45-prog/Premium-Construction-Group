@@ -51,3 +51,38 @@ The app runs under PM2 as `premium-construction` on `127.0.0.1:3040`. All CMS co
 Repository secrets (Settings → Secrets and variables → Actions): `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
 
 Rollback: `ln -sfn releases/<older-release> /var/www/premium-construction/current && pm2 reload premium-construction`.
+
+## The CMS (`/admin`)
+
+| Section | What it manages |
+| --- | --- |
+| Overview | Key numbers, clients waiting for a reply, upcoming meetings, setup checklist, recent activity |
+| Home page | Hero slides, home sections and colours |
+| Pages & insights | Every page's copy and images, insights (draft → publish, subscriber emails, RSS import), **Detail pages** (service and project-category pages, closing messages), **Site settings** (brand, navigation, footer, contact details, social links, Google Analytics, SEO), custom pages |
+| Projects portfolio | Projects with cover, gallery, key facts, stage, featured/draft/live — shown on `/projects` and `/projects/<slug>` |
+| Media library | Every image and video, alt text, reuse via the **Library** button on any image field |
+| Requests | Client requests: pipeline, stages, assignee, priority, progress, client messages, internal notes, documents |
+| Client accounts | Everyone with a portal account; resend confirmation, pause/restore |
+| Enquiries | Contact-form messages; reply by email, archive, or **Open as client request** |
+| Meetings | Booked meetings, availability, rescheduling |
+| Team & access, Activity log | CMS users and roles (admins); full audit trail (admins) |
+
+Press **Ctrl + K** anywhere in the CMS to jump to a section.
+
+## The client portal (`/account`)
+
+Anyone can sign up. After confirming their email, a client can open requests, follow each one through seven stages (Received → Under review → Site visit → Quote sent → Approved → In progress → Completed), message the team, and share or download documents. Requests opened from an enquiry with the same email appear in their account automatically.
+
+Documents (PDF, images, Word, Excel, PowerPoint, DWG/DXF, ZIP; 25 MB each) are stored privately — in the `R2_PRIVATE_BUCKET`, or in `/var/www/premium-construction/shared/data/private-files` when R2 isn't set up — and are only served through `/api/files/<id>` after a permission check. Internal notes and internal files are never shown to clients.
+
+## Insights feed
+
+`/insights/feed.xml` is an RSS feed of published insights with a large image per item (`enclosure` and `media:content`), suitable for Zapier → LinkedIn.
+
+## Going live checklist
+
+1. **Brevo** — verify the sending domain or sender, create an API key, then set `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `STAFF_NOTIFY_EMAIL`.
+2. **Cloudflare R2** — create two buckets: a public one for website media (connect a custom domain such as `media.<domain>` or enable the r2.dev URL) and a private one for client documents. Create an R2 API token with *Object Read & Write* on both, then set the `R2_*` variables.
+3. **Turnstile** — add the site in Cloudflare → Turnstile, then set `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`.
+4. **CMS → Pages → Site settings** — public site URL, contact details, social links, Google Analytics ID.
+5. Restart: `pm2 reload premium-construction --update-env`. The Overview's setup checklist shows what's still missing.

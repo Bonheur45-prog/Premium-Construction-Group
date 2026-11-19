@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
-import { serviceDetailCopy } from "@/lib/site-content/expanded-details";
 import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
 
@@ -30,7 +29,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
   const service = content.services.services.find((item) => item.id === slug);
   if (!service) notFound();
 
-  const copy = serviceDetailCopy[service.id];
+  const copy = content.detailPages.services[service.id];
   const sections = copy?.sections ?? service.points.map((point) => ({ title: point.title, body: point.text }));
   const focus = copy?.focus ?? service.points;
   const related = content.services.services
@@ -51,6 +50,7 @@ export default async function ServiceDetailPage({ params }: ServiceDetailProps) 
       sections={sections}
       focus={focus}
       related={related}
+      closing={content.detailPages.closing}
     />
   );
 }
