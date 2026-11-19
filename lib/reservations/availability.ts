@@ -1,7 +1,8 @@
 import { getBookedTimes } from "@/lib/reservations/store";
 import { getReservationSettings } from "@/lib/reservations/settings";
 
-export const RESERVATION_TIME_ZONE = "Africa/Johannesburg";
+/** Rwanda (Central Africa Time, UTC+2 all year — no daylight saving). */
+export const RESERVATION_TIME_ZONE = "Africa/Kigali";
 export const RESERVATION_WINDOW_DAYS = 90;
 export const CONSULTATION_DURATION_MINUTES = 60;
 

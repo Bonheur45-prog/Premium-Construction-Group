@@ -3,11 +3,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 
-const TIME_ZONE = "Africa/Johannesburg";
+const TIME_ZONE = "Africa/Kigali";
 
 type Availability = { availableTimes: string[]; min: string; max: string };
 
-function getDateInSouthAfrica(date: Date) {
+function getDateInKigali(date: Date) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE,
     year: "numeric",
@@ -17,7 +17,7 @@ function getDateInSouthAfrica(date: Date) {
 }
 
 function getBookingMaxDate(windowDays: number) {
-  const today = getDateInSouthAfrica(new Date());
+  const today = getDateInKigali(new Date());
   const [year, month, day] = today.split("-").map(Number);
   const lastDate = new Date(Date.UTC(year, month - 1, day + windowDays));
   return [
@@ -29,7 +29,7 @@ function getBookingMaxDate(windowDays: number) {
 
 function formatBookingDate(date: string, time: string) {
   const scheduled = new Date(`${date}T${time}:00+02:00`);
-  return new Intl.DateTimeFormat("en-ZA", {
+  return new Intl.DateTimeFormat("en-GB", {
     timeZone: TIME_ZONE,
     weekday: "long",
     day: "numeric",
@@ -47,7 +47,7 @@ export function ReservationBookingForm({
   durationMinutes = 60,
   daysLabel = "Weekdays",
   hoursLabel = "09:00–17:00",
-  timezoneLabel = "SAST",
+  timezoneLabel = "CAT",
 }: {
   enabled: boolean;
   windowDays?: number;
@@ -149,7 +149,6 @@ export function ReservationBookingForm({
   }
 
   if (confirmation) {
-    const bothEmailsSent = confirmation.customerEmailSent && confirmation.adminEmailSent;
     return (
       <div className="booking-confirmation" role="status">
         <span className="booking-confirmation__icon" aria-hidden="true">✓</span>
@@ -157,9 +156,9 @@ export function ReservationBookingForm({
         <h3>You&apos;re on our calendar.</h3>
         <p className="booking-confirmation__time">{formatBookingDate(confirmation.date, confirmation.time)}</p>
         <p>
-          {bothEmailsSent
-            ? "A confirmation has been emailed to you, and our team has been notified."
-            : "Your reservation is saved. One or more email notifications could not be delivered, so please contact our team to confirm the details."}
+          {confirmation.customerEmailSent
+            ? "A confirmation has been emailed to you, and our team can see your booking."
+            : "Your booking is saved and our team can see it. We couldn't email you a confirmation this time, so please keep a note of the date and time above."}
         </p>
         <button className="text-link booking-confirmation__again" type="button" onClick={() => window.location.reload()}>
           Make another reservation <span aria-hidden="true">↗</span>
@@ -168,17 +167,17 @@ export function ReservationBookingForm({
     );
   }
 
-  const minDate = getDateInSouthAfrica(new Date());
+  const minDate = getDateInKigali(new Date());
   const maxDate = getBookingMaxDate(windowDays);
 
   return (
     <form className="booking-form" onSubmit={handleSubmit}>
       <div className="booking-form__identity">
         <div className="booking-form__choice" role="group" aria-label="Reservation type">
-          <button type="button" disabled={!enabled} className={enquiryType === "personal" ? "is-selected" : ""} aria-pressed={enquiryType === "personal"} onClick={() => setEnquiryType("personal")}>
+          <button type="button" className={enquiryType === "personal" ? "is-selected" : ""} aria-pressed={enquiryType === "personal"} onClick={() => setEnquiryType("personal")}>
             <span aria-hidden="true">01</span> Personal
           </button>
-          <button type="button" disabled={!enabled} className={enquiryType === "company" ? "is-selected" : ""} aria-pressed={enquiryType === "company"} onClick={() => setEnquiryType("company")}>
+          <button type="button" className={enquiryType === "company" ? "is-selected" : ""} aria-pressed={enquiryType === "company"} onClick={() => setEnquiryType("company")}>
             <span aria-hidden="true">02</span> Company
           </button>
         </div>
@@ -251,12 +250,12 @@ export function ReservationBookingForm({
 
       {error && <p className="booking-form__message booking-form__message--error" role="alert">{error}</p>}
       <div className="booking-form__submit-row">
-        <p>{enabled ? `${durationMinutes}-minute meetings · ${daysLabel} · South Africa time` : "Online booking is opening soon."}</p>
+        <p>{enabled ? `${durationMinutes}-minute meetings · ${daysLabel} · Kigali time (${timezoneLabel})` : "Online booking is closed at the moment."}</p>
         <button className="button button--dark" type="submit" disabled={!enabled || submitting || loadingTimes}>
-          {!enabled ? "Booking opening soon" : submitting ? "Reserving…" : "Reserve a meeting"} <span aria-hidden="true">↗</span>
+          {!enabled ? "Booking closed" : submitting ? "Reserving…" : "Reserve a meeting"} <span aria-hidden="true">↗</span>
         </button>
       </div>
-      <p className="booking-form__timezone">{enabled ? `Available ${daysLabel.toLowerCase()} from ${hoursLabel} ${timezoneLabel}. Your confirmation email will include the reservation time.` : "Your details will be available to enter here when online booking opens."}</p>
+      <p className="booking-form__timezone">{enabled ? `Available ${daysLabel.toLowerCase()} from ${hoursLabel} ${timezoneLabel}.` : "Your details will be available to enter here when online booking opens."}</p>
     </form>
   );
 }

@@ -23,7 +23,7 @@ type Reservation = {
 
 function formatDate(date: string, time: string) {
   return new Intl.DateTimeFormat("en-ZA", {
-    timeZone: "Africa/Johannesburg",
+    timeZone: "Africa/Kigali",
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -36,7 +36,7 @@ function formatDate(date: string, time: string) {
 
 function dateInSouthAfrica() {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Johannesburg",
+    timeZone: "Africa/Kigali",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -45,7 +45,7 @@ function dateInSouthAfrica() {
 
 function timeInSouthAfrica() {
   return new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Africa/Johannesburg",
+    timeZone: "Africa/Kigali",
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
@@ -306,7 +306,7 @@ export function AdminReservationsConsole({ embedded = false }: { embedded?: bool
                 <div className="admin-reservation__date">
                   <span>{reservation.date}</span>
                   <strong>{reservation.time}</strong>
-                  <small>{reservation.status === "confirmed" ? `SAST · ${reservation.durationMinutes} min` : "Cancelled"}</small>
+                  <small>{reservation.status === "confirmed" ? `CAT · ${reservation.durationMinutes} min` : "Cancelled"}</small>
                 </div>
                 <div className="admin-reservation__body">
                   <div className="admin-reservation__topline">
@@ -359,7 +359,7 @@ export function AdminReservationsConsole({ embedded = false }: { embedded?: bool
             ))}
           </div>
         )}
-        <p className="admin-timezone-note">Meeting times are shown in South Africa Standard Time (SAST).</p>
+        <p className="admin-timezone-note">Meeting times are shown in Kigali time (Central Africa Time, CAT).</p>
       </main>
     </div>
   );
