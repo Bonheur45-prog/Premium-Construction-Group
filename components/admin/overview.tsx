@@ -58,7 +58,8 @@ export function AdminOverview() {
   return (
     <div className="cms-overview">
       <section className="cms-stats" aria-label="Key numbers">
-        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" tone="amber" />
+        <Stat label="New enquiries" value={stats.newEnquiries} note={stats.newEnquiries ? "Waiting to be read" : "Inbox is clear"} href="/admin/enquiries" tone="amber" />
+        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" tone="teal" />
         <Stat label="Media files" value={stats.mediaFiles} note={formatBytes(stats.mediaBytes)} href="/admin/media" />
         <Stat label="Published insights" value={stats.publishedArticles} note={stats.draftArticles ? `${stats.draftArticles} draft${stats.draftArticles === 1 ? "" : "s"} waiting` : "No drafts waiting"} href="/admin/pages" />
         <Stat label="Custom pages" value={stats.customPages} note="Beyond the standard pages" href="/admin/pages" />
