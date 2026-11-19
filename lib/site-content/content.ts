@@ -264,6 +264,7 @@ export const defaultSiteContent = {
       keywords: [] as string[],
       canonicalUrl: "",
       socialImage: "",
+      noIndex: false,
       status: "published" as "published" | "draft",
       sourceUrl: "",
     })),
