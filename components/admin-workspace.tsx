@@ -9,11 +9,15 @@ import { AdminReservationsConsole } from "@/components/admin-reservations-consol
 import { AdminUsersConsole } from "@/components/admin-users-console";
 import { AdminOverview } from "@/components/admin/overview";
 import { AdminMediaLibrary } from "@/components/admin/media-library";
-import { EnquiriesInbox } from "@/components/admin/enquiries-inbox";
+import { EnquiriesInbox, type EnquiryRecord } from "@/components/admin/enquiries-inbox";
+import { RequestsBoard } from "@/components/admin/requests-board";
+import { ClientsConsole } from "@/components/admin/clients-console";
+import { cmsFetch } from "@/components/admin/format";
 import { AdminProjectsEditor } from "@/components/admin/projects-editor";
+import "@/app/account/portal.css";
 import "@/app/admin/cms.css";
 
-export type AdminTab = "overview" | "website" | "pages" | "projects" | "media" | "enquiries" | "reservations" | "users";
+export type AdminTab = "overview" | "website" | "pages" | "projects" | "media" | "requests" | "clients" | "enquiries" | "reservations" | "users";
 type SignedInUser = { id: string; username: string; role: "admin" | "editor" };
 type Badges = Partial<Record<AdminTab, number>>;
 
@@ -41,6 +45,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Clients",
     items: [
+      { id: "requests", label: "Requests", href: "/admin/requests", hint: "Client requests: stages, messages, documents", icon: icon(<><path d="M4 5.5h16M4 12h16M4 18.5h10" /><circle cx="18.5" cy="18.5" r="2.5" /></>) },
+      { id: "clients", label: "Client accounts", href: "/admin/clients", hint: "Everyone with a portal account", icon: icon(<><circle cx="12" cy="8.5" r="3.8" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></>) },
       { id: "enquiries", label: "Enquiries", href: "/admin/enquiries", hint: "Messages from the contact form — reply by email", icon: icon(<><path d="M3.5 6.5h17v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" /><path d="m3.5 6.5 8.5 7 8.5-7" /></>) },
       { id: "reservations", label: "Meetings", href: "/admin/reservations", hint: "Booked meetings, availability and rescheduling", icon: icon(<><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M7.5 3.5v3M16.5 3.5v3M3.5 9h17M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01" /></>) },
     ],
@@ -182,7 +188,7 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
         const response = await fetch("/api/admin/overview", { cache: "no-store" });
         if (!response.ok || stopped) return;
         const data = await response.json();
-        setBadges({ reservations: data.stats.upcomingMeetings || 0, enquiries: data.stats.newEnquiries || 0 });
+        setBadges({ reservations: data.stats.upcomingMeetings || 0, enquiries: data.stats.newEnquiries || 0, requests: data.stats.awaitingReply || 0 });
       } catch { /* badges are a nicety */ }
     }
     void refresh();
@@ -221,6 +227,11 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
     } finally {
       setSigningIn(false);
     }
+  }
+
+  async function openRequestFromEnquiry(enquiry: EnquiryRecord) {
+    const result = await cmsFetch<{ ref: string }>("/api/admin/requests", { method: "POST", body: JSON.stringify({ enquiryId: enquiry.id }) });
+    return result.ref;
   }
 
   async function handleLogout() {
@@ -329,7 +340,9 @@ export function AdminWorkspace({ initialTab = "overview" }: { initialTab?: Admin
           {activeTab === "pages" && <AdminPagesEditor />}
           {activeTab === "projects" && <AdminProjectsEditor />}
           {activeTab === "media" && <AdminMediaLibrary />}
-          {activeTab === "enquiries" && <EnquiriesInbox />}
+          {activeTab === "requests" && <RequestsBoard />}
+          {activeTab === "clients" && <ClientsConsole isAdmin={currentUser?.role === "admin"} />}
+          {activeTab === "enquiries" && <EnquiriesInbox onConvert={openRequestFromEnquiry} />}
           {activeTab === "reservations" && <AdminReservationsConsole embedded />}
           {activeTab === "users" && currentUser?.role === "admin" && <AdminUsersConsole />}
         </div>

@@ -31,7 +31,10 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
       <div className="topline">
         <div className="shell topline__inner">
           <span>{settings.brand.legalName}</span>
-          <span className="topline__note">{settings.brand.strapline}</span>
+          <span className="topline__right">
+            <span className="topline__note">{settings.brand.strapline}</span>
+            <Link className="topline__portal" href="/account">Client portal <span aria-hidden="true">→</span></Link>
+          </span>
         </div>
       </div>
       <header className="site-header">

@@ -66,6 +66,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
               {contact.openingHours && <li className="site-footer__hours">{contact.openingHours}</li>}
             </ul>
           )}
+          <Link href="/account" className="site-footer__portal-link">Client portal · sign in <span aria-hidden="true">→</span></Link>
         </div>
       </div>
 
