@@ -4,7 +4,7 @@ import { SocialIcons } from "@/components/social-icons";
 import { getSiteContent } from "@/lib/site-content/store";
 
 export async function SiteFooter({ showInvitation = true }: { showInvitation?: boolean }) {
-  const { brand, footer, social, contact } = (await getSiteContent()).siteSettings;
+  const { brand, footer, socialLinks, contact } = (await getSiteContent()).siteSettings;
   return (
     <footer className="site-footer">
       {showInvitation && <div className="site-footer__invitation">
@@ -35,7 +35,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
             </span>
           </Link>
           <p className="site-footer__description">{brand.footerDescription}</p>
-          <SocialIcons className="social-icons--footer" links={social} />
+          <SocialIcons className="social-icons--footer" links={socialLinks} />
         </div>
 
         <nav className="site-footer__links" aria-label="Explore Premium Construction Group">
@@ -66,6 +66,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
               {contact.openingHours && <li className="site-footer__hours">{contact.openingHours}</li>}
             </ul>
           )}
+          <Link href="/account" className="site-footer__portal-link">Client portal · sign in <span aria-hidden="true">→</span></Link>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getServices } from "@/lib/cms/public";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("approach"); }
@@ -27,7 +28,7 @@ export default async function ApproachPage() {
   await connection();
   const content = await getSiteContent();
   const { hero, process, principles, capabilities: capabilityHeading, closing } = content.approach;
-  const capabilities = content.services.services;
+  const capabilities = await getServices();
 
   return (
     <SitePageTheme>
@@ -115,7 +116,7 @@ export default async function ApproachPage() {
             </div>
             <div className="approach-capabilities__grid">
               {capabilities.map((capability) => (
-                <Link className="approach-capability" href={`/services/${capability.id}`} key={capability.id}>
+                <Link className="approach-capability" href={`/services/${capability.slug}`} key={capability.id}>
                   <span>{capability.number} / {capability.category}</span>
                   <h3>{capability.title}</h3>
                   <p>{capability.description}</p>

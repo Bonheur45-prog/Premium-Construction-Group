@@ -1,15 +1,19 @@
 "use client";
 
+import { COLLECTIONS, COLLECTION_IDS } from "@/lib/cms/collections";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cmsFetch, formatBytes, formatMeeting, timeAgo } from "@/components/admin/format";
 
 type Overview = {
+  collections: Record<string, { draft: number; published: number }>;
   stats: {
     upcomingMeetings: number; newEnquiries: number; openRequests: number; awaitingReply: number; clients: number; newClients30: number;
     mediaFiles: number; mediaBytes: number; publishedArticles: number; draftArticles: number; customPages: number;
   };
   upcoming: Array<{ id: string; name: string; projectType: string; date: string; time: string; company: string }>;
+  waiting: Array<{ ref: string; title: string; name: string; status: string; since: string }>;
   activity: Array<{ id: string; actorType: string; actorName: string; action: string; summary: string; createdAt: string }>;
   setup: Array<{ id: string; label: string; done: boolean; hint: string }>;
 };
@@ -58,13 +62,55 @@ export function AdminOverview() {
   return (
     <div className="cms-overview">
       <section className="cms-stats" aria-label="Key numbers">
-        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" tone="amber" />
+        <Stat label="New enquiries" value={stats.newEnquiries} note={stats.newEnquiries ? "Waiting to be read" : "Inbox is clear"} href="/admin/enquiries" tone="amber" />
+        <Stat label="Awaiting our reply" value={stats.awaitingReply} note={`${stats.openRequests} open request${stats.openRequests === 1 ? "" : "s"}`} href="/admin/requests" tone="teal" />
+        <Stat label="Client accounts" value={stats.clients} note={stats.newClients30 ? `${stats.newClients30} joined this month` : "Portal sign-ups"} href="/admin/clients" />
+        <Stat label="Upcoming meetings" value={stats.upcomingMeetings} note="Booked from the website" href="/admin/reservations" />
         <Stat label="Media files" value={stats.mediaFiles} note={formatBytes(stats.mediaBytes)} href="/admin/media" />
-        <Stat label="Published insights" value={stats.publishedArticles} note={stats.draftArticles ? `${stats.draftArticles} draft${stats.draftArticles === 1 ? "" : "s"} waiting` : "No drafts waiting"} href="/admin/pages" />
-        <Stat label="Custom pages" value={stats.customPages} note="Beyond the standard pages" href="/admin/pages" />
+        <Stat label="Published articles" value={stats.publishedArticles} note={stats.draftArticles ? `${stats.draftArticles} draft${stats.draftArticles === 1 ? "" : "s"} waiting` : "No drafts waiting"} href="/admin/insights" />
+      </section>
+
+      <section className="cms-card cms-card--wide cms-content-map">
+        <header className="cms-card__head">
+          <div><p className="cms-eyebrow">Website content</p><h2>Everything on the website</h2></div>
+        </header>
+        <ul>
+          {COLLECTION_IDS.map((id) => {
+            const counts = data.collections?.[id] || { draft: 0, published: 0 };
+            return (
+              <li key={id}>
+                <Link href={`/admin/${id}`}>
+                  <strong>{COLLECTIONS[id].label}</strong>
+                  <span>{counts.published} live{counts.draft ? ` · ${counts.draft} draft${counts.draft === 1 ? "" : "s"}` : ""}</span>
+                  <em aria-hidden="true">→</em>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <div className="cms-overview__grid">
+        {data.waiting.length > 0 && (
+          <section className="cms-card cms-card--wide cms-waiting">
+            <header className="cms-card__head">
+              <div><p className="cms-eyebrow">Clients waiting on us</p><h2>Needs a reply</h2></div>
+              <Link className="cms-link" href="/admin/requests">Open requests →</Link>
+            </header>
+            <ul>
+              {data.waiting.map((item) => (
+                <li key={item.ref}>
+                  <Link href={`/admin/requests?open=${item.ref}`}>
+                    <span className="cms-ref">{item.ref}</span>
+                    <strong>{item.title}</strong>
+                    <span>{item.name}</span>
+                    <time dateTime={item.since}>waiting {timeAgo(item.since).replace(" ago", "")}</time>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="cms-card cms-card--marks">
           <header className="cms-card__head">
             <div><p className="cms-eyebrow">Next up</p><h2>Upcoming meetings</h2></div>

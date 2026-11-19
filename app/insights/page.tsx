@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getInsights } from "@/lib/cms/public";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("insights"); }
@@ -28,7 +29,7 @@ export default async function InsightsPage() {
   await connection();
   const content = (await getSiteContent()).insights;
   const { hero, library, closing } = content;
-  const publishedArticles = content.articles.filter((insight) => insight.status === "published");
+  const publishedArticles = await getInsights();
   return (
     <SitePageTheme>
       <SiteHeader />

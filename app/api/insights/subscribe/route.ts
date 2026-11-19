@@ -1,4 +1,4 @@
-import { getSiteContent } from "@/lib/site-content/store";
+import { getInsights } from "@/lib/cms/public";
 import { insightEmailDeliveryConfigured, subscribeToInsights } from "@/lib/insights/subscribers";
 import { isSameOriginRequest } from "@/lib/reservations/auth";
 
@@ -40,9 +40,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Enter a valid email and agree to receive insight updates." }, { status: 400 });
   }
 
-  const article = (await getSiteContent()).insights.articles.find(
-    (insight) => insight.slug === sourceInsight && insight.status === "published",
-  );
+  const article = (await getInsights()).find((insight) => insight.slug === sourceInsight);
   if (!article) return Response.json({ error: "This insight is no longer available." }, { status: 404 });
 
   try {

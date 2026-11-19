@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getServices } from "@/lib/cms/public";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("services"); }
@@ -31,7 +32,8 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 export default async function ServicesPage() {
   await connection();
   const content = (await getSiteContent()).services;
-  const { hero, index: serviceIndex, services, process, closing } = content;
+  const { hero, index: serviceIndex, process, closing } = content;
+  const services = await getServices();
   return (
     <SitePageTheme>
       <SiteHeader />
@@ -80,7 +82,7 @@ export default async function ServicesPage() {
             </ScrollReveal>
             <ScrollReveal as="nav" className="service-index__links" delay={100} aria-label="Jump to a service">
               {services.map((service) => (
-                <Link href={`#${service.id}`} key={service.id}>
+                <Link href={`#${service.slug}`} key={service.id}>
                   <span>{service.number}</span>
                   <strong>{service.title}</strong>
                   <Arrow diagonal />
@@ -93,9 +95,9 @@ export default async function ServicesPage() {
         {services.map((service, index) => (
           <section
             className={`service-detail service-detail--${service.tone}`}
-            id={service.id}
+            id={service.slug}
             key={service.id}
-            aria-labelledby={`${service.id}-title`}
+            aria-labelledby={`${service.slug}-title`}
           >
             <ScrollReveal className={`shell service-detail__inner${index % 2 === 1 ? " is-reversed" : ""}`} delay={index * 70}>
               <div className="service-detail__visual">
@@ -113,12 +115,12 @@ export default async function ServicesPage() {
                 <p className="service-detail__eyebrow">
                   <span>{service.number}</span> {service.category}
                 </p>
-                <h2 id={`${service.id}-title`}>{service.title}</h2>
+                <h2 id={`${service.slug}-title`}>{service.title}</h2>
                 <h3>{service.headline}</h3>
                 <p className="service-detail__description">{service.description}</p>
                 <ul className="service-detail__points">
-                  {service.points.map((point) => (
-                    <li key={point.title}>
+                  {service.points.map((point, pointIndex) => (
+                    <li key={`${point.title}-${pointIndex}`}>
                       <span aria-hidden="true">+</span>
                       <div>
                         <strong>{point.title}</strong>
@@ -127,7 +129,7 @@ export default async function ServicesPage() {
                     </li>
                   ))}
                 </ul>
-                <Link className="service-detail__link" href={`/services/${service.id}`}>
+                <Link className="service-detail__link" href={`/services/${service.slug}`}>
                   More about {service.title.toLowerCase()} <Arrow diagonal />
                 </Link>
               </div>

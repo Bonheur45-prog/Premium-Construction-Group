@@ -10,6 +10,8 @@ import { SiteHeader } from "@/components/site-header";
 import { getHomePageContent } from "@/lib/homepage/store";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getInsights, getPartners, getProjects, getServices, getTestimonials } from "@/lib/cms/public";
+import { LatestArticles, PartnersStrip, TestimonialsSection } from "@/components/cms-sections";
 
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
@@ -31,7 +33,9 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 
 export default async function HomePage() {
   await connection();
-  const [home, content] = await Promise.all([getHomePageContent(), getSiteContent()]);
+  const [home, content, allServices, projects, insights, testimonials, partners] = await Promise.all([
+    getHomePageContent(), getSiteContent(), getServices(), getProjects(), getInsights(), getTestimonials(), getPartners(),
+  ]);
   const colors = home.theme.colors;
   const visibleSectionTargets = [
     home.intro.enabled ? "#about" : "",
@@ -56,7 +60,15 @@ export default async function HomePage() {
     "--white": colors.white,
     "--line": colors.line,
   } as CSSProperties;
-  const services = content.services.services;
+  // Items ticked "Show on the home page" in the CMS; when none are ticked, every published one.
+  const pick = <T extends { showOnHome: boolean }>(items: T[]) => (items.some((item) => item.showOnHome) ? items.filter((item) => item.showOnHome) : items);
+  const services = pick(allServices);
+  const categoryLabels = new Map<string, string>(content.projects.categories.map((category) => [category.id, category.type]));
+  const featured = projects.filter((project) => project.featured).slice(0, 4);
+  // Featured projects from CMS → Projects; until one is featured, the category cards set on the home page.
+  const projectCards = featured.length
+    ? featured.map((project) => ({ id: project.slug, image: project.cover, alt: project.coverAlt || project.title, type: categoryLabels.get(project.category) || project.location, title: project.title }))
+    : home.projects.cards;
   const reasons = content.about.strengths.items;
 
   return (
@@ -119,7 +131,7 @@ export default async function HomePage() {
               </div>
               <div className="home-service-grid">
                 {services.map((service, index) => (
-                  <Link className="home-service-card" href={`/services/${service.id}`} key={service.id}>
+                  <Link className="home-service-card" href={`/services/${service.slug}`} key={service.id}>
                     <Image src={service.image} alt={service.imageAlt} fill unoptimized sizes="(max-width: 720px) 100vw, 33vw" />
                     <span className="home-service-card__number">{String(index + 1).padStart(2, "0")}</span>
                     <span className="home-service-card__content">
@@ -151,7 +163,7 @@ export default async function HomePage() {
                 </div>
               </div>
               <div className="home-project-grid">
-                {home.projects.cards.map((project, index) => (
+                {projectCards.map((project, index) => (
                   <Link className={`home-project-card${index === 0 ? " home-project-card--featured" : ""}`} href={`/projects/${project.id}`} key={project.id}>
                     <div className="home-project-card__image">
                       <Image src={project.image} alt={project.alt} fill unoptimized sizes="(max-width: 760px) 100vw, 50vw" />
@@ -190,6 +202,10 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        <TestimonialsSection items={pick(testimonials).slice(0, 6)} />
+        <LatestArticles items={pick(insights).slice(0, 3)} />
+        <PartnersStrip items={pick(partners)} />
 
         {home.closing.enabled && (
           <section className="home-cta" id="contact" aria-labelledby="home-cta-title">

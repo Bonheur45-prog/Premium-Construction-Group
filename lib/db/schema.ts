@@ -153,4 +153,74 @@ export const EXTRA_SCHEMA = `
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
   CREATE INDEX IF NOT EXISTS pcg_enquiries_status ON pcg_enquiries(status, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS pcg_projects (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT '',
+    stage TEXT NOT NULL DEFAULT 'completed' CHECK (stage IN ('completed', 'ongoing', 'upcoming')),
+    location TEXT NOT NULL DEFAULT '',
+    year TEXT NOT NULL DEFAULT '',
+    client TEXT NOT NULL DEFAULT '',
+    summary TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL DEFAULT '',
+    cover TEXT NOT NULL DEFAULT '',
+    cover_alt TEXT NOT NULL DEFAULT '',
+    gallery JSONB NOT NULL DEFAULT '[]'::jsonb,
+    facts JSONB NOT NULL DEFAULT '[]'::jsonb,
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    published BOOLEAN NOT NULL DEFAULT FALSE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_projects_public ON pcg_projects(published, sort_order, created_at DESC);
+
+  -- One table for every CMS collection (services, projects, insights, testimonials, partners, team, jobs).
+  -- "data" is what the website shows; "draft" holds saved-but-unpublished changes to a published item.
+  CREATE TABLE IF NOT EXISTS pcg_entries (
+    id TEXT PRIMARY KEY,
+    collection TEXT NOT NULL,
+    slug TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    show_on_home BOOLEAN NOT NULL DEFAULT FALSE,
+    data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    draft JSONB,
+    published_at TIMESTAMPTZ,
+    created_by TEXT NOT NULL DEFAULT '',
+    updated_by TEXT NOT NULL DEFAULT '',
+    deleted_at TIMESTAMPTZ,
+    deleted_by TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS pcg_entries_slug ON pcg_entries(collection, slug) WHERE deleted_at IS NULL;
+  CREATE INDEX IF NOT EXISTS pcg_entries_list ON pcg_entries(collection, deleted_at, status, sort_order);
+
+  CREATE TABLE IF NOT EXISTS pcg_entry_versions (
+    id BIGSERIAL PRIMARY KEY,
+    entry_id TEXT NOT NULL REFERENCES pcg_entries(id) ON DELETE CASCADE,
+    title TEXT NOT NULL DEFAULT '',
+    data JSONB NOT NULL,
+    note TEXT NOT NULL DEFAULT '',
+    created_by TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_entry_versions_entry ON pcg_entry_versions(entry_id, created_at DESC);
+
+  -- Old page addresses keep working after a slug change.
+  CREATE TABLE IF NOT EXISTS pcg_redirects (
+    from_path TEXT PRIMARY KEY,
+    to_path TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE TABLE IF NOT EXISTS pcg_cms_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
 `;

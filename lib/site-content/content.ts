@@ -1,3 +1,4 @@
+import { projectDetailCopy, serviceDetailCopy } from "@/lib/site-content/expanded-details";
 import { insights as starterInsights } from "@/lib/insights";
 import { projectCategories } from "@/lib/project-categories";
 
@@ -46,6 +47,8 @@ export const customSitePageTemplate: CustomSitePage = {
   sections: [{ title: "A new section", body: "Add the content for this section." }],
   closing: { title: "Let's talk.", body: "Tell us what you have in mind.", action: "Start a conversation", href: "/contact" },
 };
+
+const cloneCopy = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 export const defaultSiteContent = {
   about: {
@@ -364,14 +367,8 @@ export const defaultSiteContent = {
       mapUrl: "",
       openingHours: "Monday to Friday, 8:00 to 17:00",
     },
-    social: {
-      instagram: "",
-      facebook: "",
-      linkedin: "",
-      x: "",
-      youtube: "",
-      tiktok: "",
-    },
+    /** Social media profiles, as rows of platform + address. Empty rows are ignored on the website. */
+    socialLinks: [{ platform: "instagram", url: "" }],
     analytics: {
       googleAnalyticsId: "",
     },
@@ -390,6 +387,7 @@ export const defaultSiteContent = {
         projects: { title: "Projects", seoTitle: "", description: "Explore the commercial, residential, and infrastructure categories represented in the Premium Construction Group portfolio.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
         insights: { title: "Insights", seoTitle: "", description: "Read construction perspectives, company news, and ideas from Premium Construction Group.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
         contact: { title: "Contact Us", seoTitle: "", description: "Start a conversation with Premium Construction Group about the place you want to build.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
+        careers: { title: "Careers", seoTitle: "", description: "Open positions at Premium Construction Group, and how to apply.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
         reservations: { title: "Reserve a Meeting", seoTitle: "", description: "Choose a time to talk through your construction plans with Premium Construction Group.", keywords: [] as string[], canonicalUrl: "", socialImage: "", noIndex: false },
       },
     },
@@ -408,6 +406,7 @@ export const defaultSiteContent = {
         { id: "insights", label: "Insights", href: "/insights" },
         { id: "reservations", label: "Reserve a meeting", href: "/reservations" },
         { id: "services", label: "What we do", href: "/services" },
+        { id: "careers", label: "Careers", href: "/careers" },
       ],
       capabilitiesTitle: "Capabilities",
       capabilityLinks: [
@@ -423,12 +422,57 @@ export const defaultSiteContent = {
       backToTopLabel: "Back to top",
     },
   },
+  careers: {
+    hero: {
+      eyebrow: "Careers",
+      title: "Build what lasts,",
+      accent: "with us.",
+      intro: "We look for people who take care over the details, communicate clearly and want to see good places get built.",
+    },
+    openings: { kicker: "Open positions", title: "Current", accent: "opportunities." },
+    empty: {
+      title: "No open positions right now.",
+      body: "We are always glad to hear from people who share the way we work. Send us a short introduction and we will keep it on file.",
+      action: "Introduce yourself",
+      href: "/contact",
+    },
+    apply: { title: "Interested?", body: "Send your CV and a short note about why this role suits you.", emailLabel: "Apply by email", urlLabel: "Apply online" },
+  },
+  detailPages: {
+    services: cloneCopy(serviceDetailCopy),
+    projectCategories: cloneCopy(projectDetailCopy),
+    closing: {
+      eyebrow: "A considered next step",
+      title: "Have a project",
+      accent: "in mind?",
+      body: "Tell us what you are planning. We can start with the purpose, the people, and the questions in front of you.",
+      action: "Start a conversation",
+      href: "/contact",
+    },
+    projectPage: {
+      sheetTitle: "Project data sheet",
+      sheetAction: "Start a similar project",
+      sheetHref: "/contact",
+      galleryKicker: "On site",
+      galleryTitle: "Inside the",
+      galleryAccent: "project.",
+      relatedKicker: "Keep exploring",
+      closingEyebrow: "Your project next",
+      closingTitle: "Planning something",
+      closingAccent: "like this?",
+      closingBody: "Tell us about the place you want to build. We'll start with the purpose, the people and the questions in front of you.",
+      closingAction: "Start a conversation",
+      closingHref: "/contact",
+    },
+  },
   customPages: [] as CustomSitePage[],
 };
 
 export type SiteContent = Omit<typeof defaultSiteContent, "customPages"> & { customPages: CustomSitePage[] };
 export type SiteInsight = SiteContent["insights"]["articles"][number];
 export type SiteProjectCategory = SiteContent["projects"]["categories"][number];
+
+export const SOCIAL_PLATFORM_IDS: string[] = ["instagram", "facebook", "linkedin", "x", "youtube", "tiktok", "whatsapp", "pinterest", "threads"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -463,7 +507,8 @@ function normalizeValue(template: unknown, value: unknown, path: string): unknow
         return template;
       }
     }
-    if (path.startsWith("siteSettings.social.")) return !cleaned || /^https:\/\/[^\s]+$/i.test(cleaned) ? cleaned.slice(0, 300) : template;
+    if (path === "siteSettings.socialLinks[].url") return /^https:\/\/[^\s]+$/i.test(cleaned) ? cleaned.slice(0, 300) : "";
+    if (path === "siteSettings.socialLinks[].platform") return SOCIAL_PLATFORM_IDS.includes(cleaned) ? cleaned : "";
     if (path === "siteSettings.contact.email") return !cleaned || /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(cleaned) ? cleaned.slice(0, 254) : template;
     if (path === "siteSettings.contact.phone") return cleaned.replace(/[^\d+()\s-]/g, "").slice(0, 30);
     if (path === "siteSettings.contact.whatsapp") return cleaned.replace(/\D/g, "").slice(0, 15);
@@ -528,7 +573,7 @@ export function normalizeSiteContent(value: unknown): SiteContent {
     return { ...article, id };
   });
   const incomingPages = isRecord(value) && Array.isArray(value.customPages) ? value.customPages : [];
-  const reservedSlugs = new Set(["admin", "api", "about", "approach", "services", "projects", "insights", "contact", "reservations"]);
+  const reservedSlugs = new Set(["admin", "api", "account", "about", "approach", "services", "projects", "insights", "careers", "contact", "reservations"]);
   const seen = new Set<string>();
   const seenIds = new Set<string>();
   const customPages = incomingPages
@@ -541,5 +586,15 @@ export function normalizeSiteContent(value: unknown): SiteContent {
       return true;
     });
 
-  return { ...normalized, insights: { ...normalized.insights, articles }, customPages };
+  // Social links: older content kept them as one object ({ instagram: "https://…" }); turn that into rows.
+  const rawSettings = isRecord(value) && isRecord(value.siteSettings) ? value.siteSettings : {};
+  let socialLinks = Array.isArray(rawSettings.socialLinks) ? normalized.siteSettings.socialLinks : [];
+  if (!Array.isArray(rawSettings.socialLinks) && isRecord(rawSettings.social)) {
+    const legacy = rawSettings.social;
+    socialLinks = SOCIAL_PLATFORM_IDS
+      .map((platform) => ({ platform, url: typeof legacy[platform] === "string" && /^https:\/\/[^\s]+$/i.test(legacy[platform] as string) ? (legacy[platform] as string).slice(0, 300) : "" }));
+  }
+  socialLinks = socialLinks.filter((link) => link.platform && link.url).slice(0, 12);
+
+  return { ...normalized, siteSettings: { ...normalized.siteSettings, socialLinks }, insights: { ...normalized.insights, articles }, customPages };
 }

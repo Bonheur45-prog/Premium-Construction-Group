@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
+import { getPartners, getTeam, getTestimonials } from "@/lib/cms/public";
+import { PartnersStrip, TeamSection, TestimonialsSection } from "@/components/cms-sections";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("about"); }
 
@@ -29,7 +31,7 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 
 export default async function AboutPage() {
   await connection();
-  const content = (await getSiteContent()).about;
+  const [content, team, testimonials, partners] = await Promise.all([getSiteContent().then((site) => site.about), getTeam(), getTestimonials(), getPartners()]);
   const { hero, story, purpose, values, strengths, closing } = content;
   return (
     <SitePageTheme>
@@ -155,6 +157,10 @@ export default async function AboutPage() {
             </div>
           </div>
         </section>
+
+        <TeamSection items={team} />
+        <TestimonialsSection items={testimonials} />
+        <PartnersStrip items={partners} label="Clients and partners" />
 
         <section className="closing-cta shell about-cta">
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>

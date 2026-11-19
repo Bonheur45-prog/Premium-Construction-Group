@@ -1,3 +1,4 @@
+import { getInsights, getJobs, getProjects, getServices } from "@/lib/cms/public";
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import type { ManagedPageKey } from "@/lib/site-content/metadata";
@@ -15,6 +16,7 @@ const pagePaths: Record<ManagedPageKey, string> = {
   insights: "/insights",
   contact: "/contact",
   reservations: "/reservations",
+  careers: "/careers",
 };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -42,14 +44,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  for (const service of content.services.services) add(`/services/${service.id}`, { priority: 0.6, changeFrequency: "monthly" });
+  const [services, projects, insights, jobs] = await Promise.all([getServices(), getProjects(), getInsights(), getJobs()]);
+  for (const service of services) add(`/services/${service.slug}`, { priority: 0.6, changeFrequency: "monthly" });
   for (const category of content.projects.categories) add(`/projects/${category.id}`, { priority: 0.6, changeFrequency: "monthly" });
+  for (const project of projects) add(`/projects/${project.slug}`, { priority: 0.7, changeFrequency: "monthly" });
+  for (const job of jobs) add(`/careers/${job.slug}`, { priority: 0.5, changeFrequency: "weekly" });
   for (const page of content.customPages) {
     if (page.status !== "published" || page.noIndex) continue;
     add(page.canonicalUrl || `/${page.slug}`, { priority: 0.5, changeFrequency: "monthly" });
   }
-  for (const article of content.insights.articles) {
-    if (article.status !== "published" || article.noIndex) continue;
+  for (const article of insights) {
+    if (article.noIndex) continue;
     const lastModified = article.updatedAt || article.publishedAt;
     add(article.canonicalUrl || `/insights/${article.slug}`, {
       ...(lastModified && !Number.isNaN(Date.parse(lastModified)) ? { lastModified: new Date(lastModified) } : {}),

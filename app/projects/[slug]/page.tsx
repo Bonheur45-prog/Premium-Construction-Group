@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { notFound } from "next/navigation";
 import { ExpandedDetailPage } from "@/components/expanded-detail-page";
-import { projectDetailCopy } from "@/lib/site-content/expanded-details";
 import { buildSeoMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
+import { ProjectDetailPage as ProjectDetailView } from "@/components/project-detail-page";
+import { ProjectShowcase } from "@/components/project-showcase";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { getProjects, redirectOrNotFound } from "@/lib/cms/public";
+import { publicShowcase } from "@/lib/projects/public";
 
 type ProjectDetailProps = { params: Promise<{ slug: string }> };
 
@@ -13,7 +16,17 @@ export async function generateMetadata({ params }: ProjectDetailProps): Promise<
   const { slug } = await params;
   const content = await getSiteContent();
   const category = content.projects.categories.find((item) => item.id === slug) || null;
-  if (!category) return { title: "Project category not found", robots: { index: false, follow: false } };
+  if (!category) {
+    const project = (await getProjects()).find((item) => item.slug === slug);
+    if (!project) return { title: "Project not found", robots: { index: false, follow: false } };
+    return buildSeoMetadata(content, {
+      path: `/projects/${project.slug}`,
+      title: project.seoTitle || `${project.title} | Projects`,
+      description: project.metaDescription || project.summary,
+      socialImage: project.socialImage || project.cover,
+      imageAlt: project.coverAlt || project.title,
+    });
+  }
   return buildSeoMetadata(content, {
     path: `/projects/${category.id}`,
     title: `${category.title} | Projects`,
@@ -28,9 +41,18 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
   const { slug } = await params;
   const content = await getSiteContent();
   const category = content.projects.categories.find((item) => item.id === slug);
-  if (!category) notFound();
+  if (!category) {
+    const project = (await getProjects()).find((item) => item.slug === slug);
+    if (!project) return redirectOrNotFound(`/projects/${slug}`);
+    const labels = new Map<string, string>(content.projects.categories.map((item) => [item.id, item.type]));
+    const all = await publicShowcase(content);
+    const related = all.filter((item) => item.slug !== project.slug && (!project.category || item.category === project.category)).slice(0, 3);
+    const position = all.findIndex((item) => item.slug === project.slug);
+    return <ProjectDetailView project={project} categoryLabel={labels.get(project.category) || ""} related={related} sheetNumber={`PCG-P-${String(Math.max(position, 0) + 1).padStart(2, "0")}`} copy={content.detailPages.projectPage} />;
+  }
+  const categoryProjects = await publicShowcase(content, (project) => project.category === category.id);
 
-  const copy = projectDetailCopy[category.id];
+  const copy = content.detailPages.projectCategories[category.id];
   const sections = copy?.sections ?? [
     { title: "Start with the purpose", body: `Every ${category.type.toLowerCase()} brief begins with the people it is intended to serve and the role the place needs to play.` },
     { title: "Shape a practical response", body: "Bring the important requirements, site conditions, and design choices into a clear conversation before work moves ahead." },
@@ -60,6 +82,19 @@ export default async function ProjectDetailPage({ params }: ProjectDetailProps) 
       sections={sections}
       focus={focus}
       related={related}
-    />
+      closing={content.detailPages.closing}
+    >
+      {categoryProjects.length > 0 && (
+        <section className="section-pad project-category-work" aria-labelledby="category-work-title">
+          <div className="shell">
+            <ScrollReveal className="project-detail__section-head">
+              <p className="section-kicker"><span>{category.type} portfolio</span><span className="section-kicker__rule" /></p>
+              <h2 id="category-work-title">Selected <em>{category.type.toLowerCase()} work.</em></h2>
+            </ScrollReveal>
+            <ProjectShowcase projects={categoryProjects} showFilters={false} />
+          </div>
+        </section>
+      )}
+    </ExpandedDetailPage>
   );
 }
