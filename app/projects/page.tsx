@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { connection } from "next/server";
 import { ProjectGallery } from "@/components/project-gallery";
+import { ProjectShowcase } from "@/components/project-showcase";
+import { publicShowcase } from "@/lib/projects/public";
 import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -31,8 +33,10 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 
 export default async function ProjectsPage() {
   await connection();
-  const content = (await getSiteContent()).projects;
+  const siteContent = await getSiteContent();
+  const content = siteContent.projects;
   const { hero, portfolio, categories, belief, closing } = content;
+  const showcase = await publicShowcase(siteContent);
   return (
     <SitePageTheme>
       <SiteHeader />
@@ -87,6 +91,21 @@ export default async function ProjectsPage() {
 
           </div>
         </section>
+
+        {showcase.length > 0 && (
+          <section className="section-pad project-showcase-section" id="work" aria-labelledby="work-title">
+            <div className="shell">
+              <ScrollReveal className="portfolio-section__heading">
+                <div>
+                  <p className="section-kicker"><span>Our work</span><span className="section-kicker__rule" /></p>
+                  <h2 id="work-title">Projects we&apos;ve <em>delivered.</em></h2>
+                </div>
+                <p>A closer look at completed and ongoing work: the brief, the build, and the places that came out of it.</p>
+              </ScrollReveal>
+              <ProjectShowcase projects={showcase} />
+            </div>
+          </section>
+        )}
 
         <section className="project-belief" aria-label="Our perspective">
           <ScrollReveal className="shell project-belief__inner">

@@ -25,6 +25,8 @@ type ExpandedDetailPageProps = {
   sections: ExpandedDetailSection[];
   focus: ExpandedDetailFocus[];
   related: RelatedDetail[];
+  /** Extra content shown before "Keep exploring" (e.g. the projects in a category). */
+  children?: React.ReactNode;
 };
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -48,6 +50,7 @@ export function ExpandedDetailPage({
   sections,
   focus,
   related,
+  children,
 }: ExpandedDetailPageProps) {
   const collectionHref = kind === "service" ? "/services" : "/projects";
   const collectionLabel = kind === "service" ? "Services" : "Projects";
@@ -119,6 +122,8 @@ export function ExpandedDetailPage({
 
           </div>
         </section>
+
+        {children}
 
         {related.length > 0 && (
           <section className="expanded-detail-related section-pad" aria-labelledby="expanded-detail-related-title">

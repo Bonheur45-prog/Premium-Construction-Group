@@ -153,4 +153,27 @@ export const EXTRA_SCHEMA = `
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
   CREATE INDEX IF NOT EXISTS pcg_enquiries_status ON pcg_enquiries(status, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS pcg_projects (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT '',
+    stage TEXT NOT NULL DEFAULT 'completed' CHECK (stage IN ('completed', 'ongoing', 'upcoming')),
+    location TEXT NOT NULL DEFAULT '',
+    year TEXT NOT NULL DEFAULT '',
+    client TEXT NOT NULL DEFAULT '',
+    summary TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL DEFAULT '',
+    cover TEXT NOT NULL DEFAULT '',
+    cover_alt TEXT NOT NULL DEFAULT '',
+    gallery JSONB NOT NULL DEFAULT '[]'::jsonb,
+    facts JSONB NOT NULL DEFAULT '[]'::jsonb,
+    featured BOOLEAN NOT NULL DEFAULT FALSE,
+    published BOOLEAN NOT NULL DEFAULT FALSE,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_projects_public ON pcg_projects(published, sort_order, created_at DESC);
 `;

@@ -1,18 +1,44 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { TurnstileField } from "@/components/turnstile-field";
 
 type EnquiryType = "personal" | "company";
 
 export function ContactEnquiryForm() {
   const [enquiryType, setEnquiryType] = useState<EnquiryType>("personal");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [resetSignal, setResetSignal] = useState(0);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus(
-      "This form is ready for your enquiry, but it is not connected to an inbox yet. Your message has not been sent.",
-    );
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    setSending(true);
+    setStatus(null);
+    try {
+      const response = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, enquiryType, turnstileToken }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "Your enquiry couldn't be sent. Please try again.");
+      form.reset();
+      setStatus({
+        tone: "ok",
+        text: result.acknowledged
+          ? "Thank you, your enquiry has been received. We've emailed you a copy and will reply within two working days."
+          : "Thank you, your enquiry has been received. We'll reply within two working days.",
+      });
+    } catch (reason) {
+      setStatus({ tone: "error", text: reason instanceof Error ? reason.message : "Your enquiry couldn't be sent. Please try again." });
+    } finally {
+      setSending(false);
+      setResetSignal((value) => value + 1);
+    }
   }
 
   return (
@@ -49,11 +75,11 @@ export function ContactEnquiryForm() {
       <div className="contact-form__fields">
         <label className="contact-field">
           <span>First name <i>*</i></span>
-          <input name="firstName" autoComplete="given-name" placeholder="Your first name" required />
+          <input name="firstName" maxLength={80} autoComplete="given-name" placeholder="Your first name" required />
         </label>
         <label className="contact-field">
           <span>Last name <i>*</i></span>
-          <input name="lastName" autoComplete="family-name" placeholder="Your last name" required />
+          <input name="lastName" maxLength={80} autoComplete="family-name" placeholder="Your last name" required />
         </label>
         <label className="contact-field">
           <span>Email address <i>*</i></span>
@@ -82,17 +108,19 @@ export function ContactEnquiryForm() {
         </label>
         <label className="contact-field contact-field--full">
           <span>A little more about your project <i>*</i></span>
-          <textarea name="message" rows={5} placeholder="Share your ideas, location, timeline, or any early questions..." required />
+          <textarea name="message" rows={5} maxLength={5000} minLength={10} placeholder="Share your ideas, location, timeline, or any early questions..." required />
         </label>
       </div>
 
+      <label className="contact-form__trap" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
+      <TurnstileField onToken={setTurnstileToken} resetSignal={resetSignal} />
       <div className="contact-form__submit-row">
         <p>Fields marked <i>*</i> are required.</p>
-        <button className="button button--dark contact-form__submit" type="submit">
-          Send enquiry <span aria-hidden="true">↗</span>
+        <button className="button button--dark contact-form__submit" type="submit" disabled={sending}>
+          {sending ? "Sending…" : "Send enquiry"} <span aria-hidden="true">↗</span>
         </button>
       </div>
-      {status && <p className="contact-form__status" role="status">{status}</p>}
+      {status && <p className={`contact-form__status contact-form__status--${status.tone}`} role={status.tone === "error" ? "alert" : "status"}>{status.text}</p>}
     </form>
   );
 }
