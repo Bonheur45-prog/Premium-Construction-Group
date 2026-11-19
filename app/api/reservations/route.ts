@@ -1,3 +1,4 @@
+import { publicOrigin } from "@/lib/server/http";
 import { getAvailableReservationTimes, isBookableReservationTime } from "@/lib/reservations/availability";
 import { reservationSystemConfigured, sendReservationConfirmation } from "@/lib/reservations/email";
 import { createReservation, hasReachedDailyReservationLimit, ReservationSlotUnavailableError, setReservationEmailStatus } from "@/lib/reservations/store";
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     const reservation = await createReservation(input, (await getReservationSettings()).durationMinutes);
-    const adminUrl = `${new URL(request.url).origin}/admin/reservations`;
+    const adminUrl = `${publicOrigin(request)}/admin/reservations`;
     const delivery = await sendReservationConfirmation(reservation, adminUrl);
     await setReservationEmailStatus(reservation.id, delivery.customer, delivery.admin);
 

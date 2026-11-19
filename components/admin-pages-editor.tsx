@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { MediaPicker } from "@/components/admin/media-library";
 import { customSitePageTemplate, defaultSiteContent, type SiteContent, type SiteInsight } from "@/lib/site-content/content";
 
 type SitePage = "about" | "approach" | "services" | "projects" | "insights" | "contact" | "reservations" | "siteSettings" | "custom-pages";
@@ -234,6 +235,7 @@ function freshEntry(template: unknown, arrayPath: string, index: number): unknow
 
 function MediaInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   const [uploading, setUploading] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [error, setError] = useState("");
   async function upload(file?: File) {
     if (!file) return;
@@ -258,7 +260,9 @@ function MediaInput({ label, value, onChange }: { label: string; value: string; 
       <div className="admin-content-media-row">
         <input aria-label={label} type="text" value={value} onChange={(event) => onChange(event.target.value)} placeholder="Paste a media URL or upload an image" />
         <label className="admin-content-upload">{uploading ? "Uploading…" : "Upload image"}<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" disabled={uploading} onChange={(event) => { void upload(event.target.files?.[0]); event.currentTarget.value = ""; }} /></label>
+        <button type="button" className="admin-content-upload admin-content-library" onClick={() => setPicking(true)}>Library</button>
       </div>
+      {picking && <MediaPicker kind="image" onClose={() => setPicking(false)} onSelect={(item) => { onChange(item.url); setPicking(false); }} />}
       {value && <img className="admin-content-media-preview" src={value} alt="" />}
       {error && <small className="admin-content-error">{error}</small>}
     </>

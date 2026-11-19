@@ -5,6 +5,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pgQuery, postgresEnabled } from "@/lib/db/postgres";
+import { emailConfigured } from "@/lib/email/send";
 
 type SubscriberRow = { email: string; source_insight: string; subscribed_at: string };
 
@@ -93,11 +94,11 @@ export async function unsubscribeFromInsights(email: string) {
 }
 
 function unsubscribeSecret() {
-  return process.env.INSIGHT_UNSUBSCRIBE_SECRET || process.env.RESERVATION_SESSION_SECRET || process.env.RESEND_API_KEY || "";
+  return process.env.INSIGHT_UNSUBSCRIBE_SECRET || process.env.RESERVATION_SESSION_SECRET || "";
 }
 
 export function insightEmailDeliveryConfigured() {
-  return Boolean(process.env.RESEND_API_KEY && process.env.RESERVATION_FROM_EMAIL && createInsightUnsubscribeToken("token-check@invalid.example"));
+  return Boolean(emailConfigured() && createInsightUnsubscribeToken("token-check@invalid.example"));
 }
 
 export function createInsightUnsubscribeToken(email: string) {

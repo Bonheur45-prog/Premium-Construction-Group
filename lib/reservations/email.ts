@@ -4,6 +4,7 @@ import { adminConfigurationReady } from "@/lib/reservations/auth";
 import { getReservationSettings } from "@/lib/reservations/settings";
 import { formatReservationDateTime } from "@/lib/reservations/availability";
 import type { Reservation } from "@/lib/reservations/types";
+import { emailConfigured, sendEmail, staffNotifyEmail } from "@/lib/email/send";
 
 type Delivery = { customer: boolean; admin: boolean };
 
@@ -12,9 +13,8 @@ export async function reservationSystemConfigured() {
   const adminReady = await adminConfigurationReady();
   return Boolean(
     settings.enabled &&
-    process.env.RESEND_API_KEY &&
-      process.env.RESERVATION_FROM_EMAIL &&
-      process.env.RESERVATION_ADMIN_EMAIL &&
+    emailConfigured() &&
+      staffNotifyEmail() &&
       adminReady,
   );
 }
@@ -38,7 +38,6 @@ async function deliverEmail({
   text,
   html,
   replyTo,
-  idempotencyKey,
 }: {
   to: string | undefined;
   subject: string;
@@ -47,25 +46,7 @@ async function deliverEmail({
   replyTo?: string;
   idempotencyKey: string;
 }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESERVATION_FROM_EMAIL;
-  if (!apiKey || !from || !to) return false;
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": idempotencyKey,
-      },
-      body: JSON.stringify({ from, to: [to], subject, text, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
-      cache: "no-store",
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
+  return sendEmail({ to, subject, text, html, replyTo, tags: ["reservation"] });
 }
 
 function emailFrame(title: string, body: string) {
@@ -114,7 +95,7 @@ export async function sendReservationConfirmation(reservation: Reservation, admi
   });
 
   const admin = deliverEmail({
-    to: process.env.RESERVATION_ADMIN_EMAIL,
+    to: staffNotifyEmail(),
     subject: `New project meeting · ${reservation.name} · ${dateTime}`,
     replyTo: reservation.email,
     text: `A new project meeting has been reserved.\n\n${reservationSummary(reservation)}\n\nManage reservations: ${adminUrl}`,
@@ -145,7 +126,7 @@ export async function sendReservationRescheduled(
     idempotencyKey: `reservation-${reservation.id}-rescheduled-${previous.date}-${previous.time}-${reservation.date}-${reservation.time}`,
   });
   const admin = deliverEmail({
-    to: process.env.RESERVATION_ADMIN_EMAIL,
+    to: staffNotifyEmail(),
     subject: `Meeting moved · ${reservation.name} · ${newDateTime}`,
     replyTo: reservation.email,
     text: `A project meeting was rescheduled.\nPrevious: ${oldDateTime}\nNew meeting: ${newDateTime}\n\n${reservationSummary(reservation)}\n\nManage reservations: ${adminUrl}`,
@@ -173,7 +154,7 @@ export async function sendReservationCancelled(reservation: Reservation, adminUr
     idempotencyKey: `reservation-${reservation.id}-cancelled-${reservation.date}-${reservation.time}`,
   });
   const admin = deliverEmail({
-    to: process.env.RESERVATION_ADMIN_EMAIL,
+    to: staffNotifyEmail(),
     subject: `Meeting cancelled · ${reservation.name} · ${dateTime}`,
     replyTo: reservation.email,
     text: `A project meeting was cancelled.\n\n${reservationSummary(reservation)}\n\nManage reservations: ${adminUrl}`,

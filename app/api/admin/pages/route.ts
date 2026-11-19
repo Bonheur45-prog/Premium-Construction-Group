@@ -1,3 +1,6 @@
+import { getAdminSessionUserFromRequest } from "@/lib/reservations/auth";
+import { logActivity } from "@/lib/server/activity";
+import { publicOrigin } from "@/lib/server/http";
 import { hasValidAdminSession, isSameOriginRequest } from "@/lib/reservations/auth";
 import { saveSiteContent, getSiteContent } from "@/lib/site-content/store";
 import { sendInsightPublication } from "@/lib/insights/email";
@@ -36,8 +39,10 @@ export async function PUT(request: Request) {
     const newlyPublished = content.insights.articles.filter((article) => article.status === "published" && !previouslyPublished.has(article.slug));
     const insightNotifications = await Promise.all(newlyPublished.map(async (article) => ({
       slug: article.slug,
-      ...(await sendInsightPublication(article, new URL(request.url).origin)),
+      ...(await sendInsightPublication(article, publicOrigin(request))),
     })));
+    const editor = await getAdminSessionUserFromRequest(request);
+    if (editor) await logActivity({ type: "staff", id: editor.id, name: editor.username }, "page.update", newlyPublished.length ? `published “${newlyPublished[0].title}”${newlyPublished.length > 1 ? ` and ${newlyPublished.length - 1} more` : ""}` : "updated the website pages", { type: "page" });
     return Response.json({ content, insightNotifications }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return Response.json({ error: "Site content could not be saved." }, { status: 500 });
