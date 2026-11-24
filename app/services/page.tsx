@@ -8,6 +8,7 @@ import { SitePageTheme } from "@/components/site-page-theme";
 import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { getSiteContent } from "@/lib/site-content/store";
 import { getServices } from "@/lib/cms/public";
+import { getFeatures } from "@/lib/features";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("services"); }
@@ -33,7 +34,7 @@ export default async function ServicesPage() {
   await connection();
   const content = (await getSiteContent()).services;
   const { hero, index: serviceIndex, process, closing } = content;
-  const services = await getServices();
+  const [services, features] = await Promise.all([getServices(), getFeatures()]);
   return (
     <SitePageTheme>
       <SiteHeader />
@@ -158,6 +159,16 @@ export default async function ServicesPage() {
           </div>
         </section>
 
+        {features.estimator.enabled && (
+          <section className="shell estimate-teaser">
+            <div>
+              <p className="eyebrow"><span /> Budget estimator</p>
+              <h2>Curious what your project <em>could cost?</em></h2>
+              <p>Pick the type, size and finish for an indicative range in seconds.</p>
+            </div>
+            <Link className="button button--primary" href="/estimate">Estimate my budget <Arrow diagonal /></Link>
+          </section>
+        )}
         <ScrollReveal as="section" className="closing-cta shell services-cta" delay={80}>
           <div className="closing-cta__mark" aria-hidden="true">PCG<span>.</span></div>
           <div className="closing-cta__copy">

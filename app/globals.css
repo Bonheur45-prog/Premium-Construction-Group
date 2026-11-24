@@ -2780,3 +2780,61 @@ p { font-family: var(--font-ubuntu), "Ubuntu", sans-serif !important; }
   .job-apply { position: static; }
   .careers-hero { padding-top: 120px; }
 }
+
+/* WhatsApp button (public pages only, CMS → Features) */
+.wa-float { position: fixed; right: 20px; bottom: 20px; z-index: 50; display: inline-flex; align-items: center; gap: 10px; height: 58px; padding: 0 14px; border-radius: 99px; background: #1fa855; color: #fff; box-shadow: 0 12px 30px rgba(15, 80, 45, .35); text-decoration: none; transition: transform .2s ease, box-shadow .2s ease; }
+.wa-float:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(15, 80, 45, .42); }
+.wa-float__label { max-width: 0; overflow: hidden; font-weight: 700; font-size: 15px; white-space: nowrap; transition: max-width .3s ease, margin .3s ease; }
+.wa-float:hover .wa-float__label, .wa-float:focus-visible .wa-float__label { max-width: 140px; margin-right: 6px; }
+@media (max-width: 760px) { .wa-float { right: 14px; bottom: 14px; height: 54px; } }
+@media print { .wa-float { display: none; } }
+
+/* ---------- Budget estimator (CMS → Features) ---------- */
+.estimator { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 28px; align-items: start; }
+.estimator__form { display: grid; gap: 18px; }
+.estimator__step { margin: 0; padding: 24px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+.estimator__step legend { float: left; width: 100%; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: var(--night-deep); font-size: 20px; font-weight: 700; }
+.estimator__step legend span { color: var(--amber); font-size: 12px; letter-spacing: .14em; }
+.estimator__step legend + * { clear: both; }
+.estimator input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.estimator__types { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.estimator__types label { display: grid; justify-items: start; gap: 10px; padding: 16px; border: 1.5px solid var(--line); border-radius: 16px; color: var(--ink-soft); font-weight: 600; cursor: pointer; transition: border-color .2s ease, background .2s ease, color .2s ease; }
+.estimator__types label svg { color: var(--blue); }
+.estimator__types label.is-on { border-color: var(--night-deep); background: var(--night-deep); color: #fff; }
+.estimator__types label.is-on svg { color: var(--amber); }
+.estimator__area { display: flex; align-items: center; gap: 14px; color: var(--blue); }
+.estimator__area input[type="range"] { flex: 1; accent-color: var(--amber); }
+.estimator__number { display: flex; align-items: center; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; color: var(--ink); }
+.estimator__number input { width: 96px; min-height: 46px; padding: 0 10px; border: 0; font: 700 18px inherit; text-align: right; }
+.estimator__number span { padding: 0 12px; color: var(--ink-soft); }
+.estimator__floors { display: flex; align-items: center; gap: 6px; margin-top: 16px; }
+.estimator__floors > span { margin-right: 8px; color: var(--ink-soft); font-weight: 600; }
+.estimator__floors button { width: 42px; height: 38px; border: 1.5px solid var(--line); border-radius: 10px; background: none; color: var(--ink); font-weight: 700; cursor: pointer; }
+.estimator__floors button.is-on { border-color: var(--night-deep); background: var(--night-deep); color: #fff; }
+.estimator__hint { display: block; margin-top: 12px; color: var(--ink-soft); font-size: 13.5px; }
+.estimator__finishes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.estimator__finishes label { display: grid; gap: 4px; padding: 16px; border: 1.5px solid var(--line); border-radius: 16px; cursor: pointer; }
+.estimator__finishes strong { color: var(--night-deep); }
+.estimator__finishes span { color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
+.estimator__finishes label.is-on { border-color: var(--amber); background: #fff7ea; box-shadow: inset 0 0 0 1px var(--amber); }
+.estimator__result { position: sticky; top: 110px; display: grid; gap: 10px; padding: 30px; border-radius: 26px; background: radial-gradient(120% 80% at 0% 0%, #1d5470, var(--night-deep)); color: #fff; box-shadow: 0 30px 70px rgba(10,31,43,.3); }
+.estimator__result > svg { color: var(--amber); }
+.estimator__label { margin: 0; color: var(--amber); font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.estimator__range { margin: 0; font-size: clamp(34px, 3.6vw, 48px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+.estimator__range small { font-size: 16px; letter-spacing: .08em; opacity: .7; }
+.estimator__range span { opacity: .5; }
+.estimator__exact { margin: 0; color: rgba(255,255,255,.7); font-size: 14px; }
+.estimator__facts { display: grid; gap: 6px; margin: 8px 0; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); }
+.estimator__facts div { display: flex; justify-content: space-between; font-size: 14px; }
+.estimator__facts dt { color: rgba(255,255,255,.65); }
+.estimator__facts dd { margin: 0; font-weight: 700; }
+.estimator__small { margin: 0; color: rgba(255,255,255,.6); font-size: 12.5px; line-height: 1.6; }
+.estimator__actions { display: grid; gap: 10px; margin-top: 8px; }
+.estimator .button--light { justify-content: center; background: var(--amber); color: var(--night-deep); }
+.estimator__link { color: rgba(255,255,255,.8); font-size: 14px; text-align: center; }
+@media (max-width: 960px) { .estimator { grid-template-columns: minmax(0, 1fr); } .estimator__result { position: static; } }
+.estimate-teaser { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px; margin-top: 20px; margin-bottom: 60px; padding: 34px clamp(22px, 4vw, 48px); border-radius: 26px; background: radial-gradient(120% 120% at 100% 0%, #1d5470, var(--night-deep)); color: #fff; }
+.estimate-teaser h2 { margin: 8px 0; color: #fff; font-size: clamp(26px, 3vw, 38px); }
+.estimate-teaser h2 em { color: var(--amber); }
+.estimate-teaser p { margin: 0; color: rgba(255,255,255,.75); }
+.estimate-teaser .eyebrow { color: var(--amber); }

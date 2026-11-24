@@ -35,7 +35,7 @@ export function PortalDashboard({ name, verified, requests, meetings, contact, n
     <div className="portal-dashboard">
       <section className="portal-welcome">
         <div>
-          <p className="portal-eyebrow">Client portal</p>
+          <p className="portal-eyebrow">Requests</p>
           <h1>Hello, <em>{firstName}.</em></h1>
           <p>{notice === "welcome" ? "Your account is ready. Here's where you'll follow every request with us." : notice === "reset" ? "Your password has been changed." : unread ? `You have ${unread} new update${unread === 1 ? "" : "s"} from our team.` : open.length ? `You have ${open.length} active request${open.length === 1 ? "" : "s"} with us.` : "Everything you're working on with us, in one place."}</p>
         </div>
@@ -117,14 +117,14 @@ export function PortalDashboard({ name, verified, requests, meetings, contact, n
                 })}
               </ul>
             ) : <p className="portal-muted">No meetings booked.</p>}
-            <Link className="portal-link" href="/reservations">Book a meeting →</Link>
+            <Link className="portal-link" href="/account/meetings">Book a meeting →</Link>
           </section>
           <section className="portal-panel portal-panel--dark">
             <h3>Talk to our team</h3>
-            <p>Questions about a request? Message us from the request page, or reach us directly.</p>
+            <p>Questions about anything? Write to us in Messages — the whole team sees it — or reach us directly.</p>
+            <Link className="portal-link portal-link--light" href="/account/messages">Open Messages →</Link>
             <ul className="portal-contact">
               {contact.phone && <li><a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}>{contact.phone}</a></li>}
-              {contact.whatsapp && <li><a href={`https://wa.me/${contact.whatsapp}`} target="_blank" rel="noreferrer">WhatsApp</a></li>}
               {contact.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
             </ul>
             {contact.openingHours && <small>{contact.openingHours}</small>}

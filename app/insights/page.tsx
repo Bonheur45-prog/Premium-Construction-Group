@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,7 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
 import { getSiteContent } from "@/lib/site-content/store";
-import { getInsights } from "@/lib/cms/public";
+import { getInsights, sectionOn } from "@/lib/cms/public";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 
 export async function generateMetadata(): Promise<Metadata> { return getManagedPageMetadata("insights"); }
@@ -26,6 +27,7 @@ function Arrow({ diagonal = false }: { diagonal?: boolean }) {
 }
 
 export default async function InsightsPage() {
+  if (!(await sectionOn("blog"))) notFound();
   await connection();
   const content = (await getSiteContent()).insights;
   const { hero, library, closing } = content;

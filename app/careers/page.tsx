@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -5,7 +6,7 @@ import { PageScrollProgress, ScrollReveal } from "@/components/scroll-reveal";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SitePageTheme } from "@/components/site-page-theme";
-import { getJobs } from "@/lib/cms/public";
+import { getJobs, sectionOn } from "@/lib/cms/public";
 import { formatLongDate as formatDeadline, jobTypeLabel } from "@/lib/cms/format";
 import { getManagedPageMetadata } from "@/lib/site-content/metadata";
 import { getSiteContent } from "@/lib/site-content/store";
@@ -14,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> { return getManagedP
 
 /** Careers: the open positions published in CMS → Careers. Closed (past deadline) jobs disappear on their own. */
 export default async function CareersPage() {
+  if (!(await sectionOn("careers"))) notFound();
   await connection();
   const [content, jobs] = await Promise.all([getSiteContent(), getJobs()]);
   const { hero, openings, empty } = content.careers;

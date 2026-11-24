@@ -7,6 +7,7 @@ import { docFromParagraphs, renderDoc } from "@/lib/cms/richtext";
 import type { CollectionId } from "@/lib/cms/collections";
 import { getSiteContent } from "@/lib/site-content/store";
 import { findRedirect } from "@/lib/cms/entries";
+import { getFeatures } from "@/lib/features";
 import { notFound, permanentRedirect } from "next/navigation";
 
 /**
@@ -42,6 +43,11 @@ export type PublicService = Seo & {
   points: Array<{ title: string; text: string }>; sections: Array<{ title: string; body: string }>; focus: Array<{ title: string; text: string }>;
 };
 
+/** Website sections switched off under CMS → Features return nothing (their content stays in the CMS). */
+export async function sectionOn(section: "blog" | "testimonials" | "partners" | "team" | "careers") {
+  return (await getFeatures()).sections[section];
+}
+
 export const getServices = cache(async (): Promise<PublicService[]> => {
   if (!postgresEnabled()) {
     const content = await getSiteContent();
@@ -69,6 +75,7 @@ export type PublicInsight = Seo & {
 };
 
 export const getInsights = cache(async (): Promise<PublicInsight[]> => {
+  if (!(await sectionOn("blog"))) return [];
   if (!postgresEnabled()) {
     const content = await getSiteContent();
     return content.insights.articles.filter((article) => article.status === "published").map((article, index) => {
@@ -109,17 +116,17 @@ export const getProjects = cache(async (): Promise<PublicProject[]> => {
 
 /* ---------- Testimonials, partners, team ---------- */
 export type PublicTestimonial = { id: string; quote: string; name: string; role: string; company: string; photo: string; photoAlt: string; showOnHome: boolean };
-export const getTestimonials = cache(async (): Promise<PublicTestimonial[]> => (await published("testimonials")).filter((row) => str(row.data.quote)).map((row) => ({
+export const getTestimonials = cache(async (): Promise<PublicTestimonial[]> => (!(await sectionOn("testimonials")) ? [] : await published("testimonials")).filter((row) => str(row.data.quote)).map((row) => ({
   id: row.id, quote: str(row.data.quote), name: row.title, role: str(row.data.role), company: str(row.data.company), photo: str(row.data.photo), photoAlt: str(row.data.photoAlt), showOnHome: row.showOnHome,
 })));
 
 export type PublicPartner = { id: string; name: string; logo: string; website: string; showOnHome: boolean };
-export const getPartners = cache(async (): Promise<PublicPartner[]> => (await published("partners")).filter((row) => str(row.data.logo)).map((row) => ({
+export const getPartners = cache(async (): Promise<PublicPartner[]> => (!(await sectionOn("partners")) ? [] : await published("partners")).filter((row) => str(row.data.logo)).map((row) => ({
   id: row.id, name: row.title, logo: str(row.data.logo), website: str(row.data.website), showOnHome: row.showOnHome,
 })));
 
 export type PublicTeamMember = { id: string; name: string; role: string; bio: string; photo: string; photoAlt: string; linkedin: string; email: string };
-export const getTeam = cache(async (): Promise<PublicTeamMember[]> => (await published("team")).map((row) => ({
+export const getTeam = cache(async (): Promise<PublicTeamMember[]> => (!(await sectionOn("team")) ? [] : await published("team")).map((row) => ({
   id: row.id, name: row.title, role: str(row.data.role), bio: str(row.data.bio), photo: str(row.data.photo), photoAlt: str(row.data.photoAlt), linkedin: str(row.data.linkedin), email: str(row.data.email),
 })));
 
@@ -130,6 +137,7 @@ export type PublicJob = Seo & {
 };
 
 export const getJobs = cache(async (): Promise<PublicJob[]> => {
+  if (!(await sectionOn("careers"))) return [];
   const today = new Date().toISOString().slice(0, 10);
   return (await published("jobs")).filter((row) => !str(row.data.deadline) || str(row.data.deadline) >= today).map((row) => ({
     id: row.id, slug: row.slug, title: row.title, summary: str(row.data.summary), bodyHtml: str(row.data.bodyHtml), location: str(row.data.location), type: str(row.data.type),

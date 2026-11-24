@@ -1,4 +1,5 @@
 import { getInsights, getJobs, getProjects, getServices } from "@/lib/cms/public";
+import { getFeatures } from "@/lib/features";
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 import type { ManagedPageKey } from "@/lib/site-content/metadata";
@@ -49,6 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const category of content.projects.categories) add(`/projects/${category.id}`, { priority: 0.6, changeFrequency: "monthly" });
   for (const project of projects) add(`/projects/${project.slug}`, { priority: 0.7, changeFrequency: "monthly" });
   for (const job of jobs) add(`/careers/${job.slug}`, { priority: 0.5, changeFrequency: "weekly" });
+  if ((await getFeatures()).estimator.enabled) add("/estimate", { priority: 0.6, changeFrequency: "monthly" });
   for (const page of content.customPages) {
     if (page.status !== "published" || page.noIndex) continue;
     add(page.canonicalUrl || `/${page.slug}`, { priority: 0.5, changeFrequency: "monthly" });

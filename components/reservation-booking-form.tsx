@@ -48,6 +48,8 @@ export function ReservationBookingForm({
   daysLabel = "Weekdays",
   hoursLabel = "09:00–17:00",
   timezoneLabel = "CAT",
+  prefill,
+  onBooked,
 }: {
   enabled: boolean;
   windowDays?: number;
@@ -55,8 +57,13 @@ export function ReservationBookingForm({
   daysLabel?: string;
   hoursLabel?: string;
   timezoneLabel?: string;
+  /** Signed-in clients: their details are filled in for them. */
+  prefill?: { name: string; email: string; phone: string; company: string };
+  onBooked?: () => void;
 }) {
-  const [enquiryType, setEnquiryType] = useState<"personal" | "company">("personal");
+  const [enquiryType, setEnquiryType] = useState<"personal" | "company">(prefill?.company ? "company" : "personal");
+  const [firstName, ...rest] = (prefill?.name || "").split(" ");
+  const lastName = rest.join(" ");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [availability, setAvailability] = useState<Availability | null>(null);
@@ -141,6 +148,7 @@ export function ReservationBookingForm({
         customerEmailSent: Boolean(result.notifications?.customer),
         adminEmailSent: Boolean(result.notifications?.admin),
       });
+      onBooked?.();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "We could not save your reservation.");
     } finally {
@@ -193,24 +201,24 @@ export function ReservationBookingForm({
       <fieldset className="booking-form__fields" disabled={!enabled}>
         <label className="booking-field">
           <span>First name <i>*</i></span>
-          <input name="firstName" autoComplete="given-name" placeholder="Your first name" required />
+          <input name="firstName" autoComplete="given-name" placeholder="Your first name" required defaultValue={firstName} />
         </label>
         <label className="booking-field">
           <span>Last name <i>*</i></span>
-          <input name="lastName" autoComplete="family-name" placeholder="Your last name" required />
+          <input name="lastName" autoComplete="family-name" placeholder="Your last name" required defaultValue={lastName} />
         </label>
         <label className="booking-field">
           <span>Email address <i>*</i></span>
-          <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
+          <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required defaultValue={prefill?.email} readOnly={Boolean(prefill?.email)} />
         </label>
         <label className="booking-field">
           <span>Phone number</span>
-          <input name="phone" type="tel" autoComplete="tel" placeholder="Include your country code" />
+          <input name="phone" type="tel" autoComplete="tel" placeholder="Include your country code" defaultValue={prefill?.phone} />
         </label>
         {enquiryType === "company" && (
           <label className="booking-field booking-field--full">
             <span>Company name <i>*</i></span>
-            <input name="company" autoComplete="organization" placeholder="Your company name" required />
+            <input name="company" autoComplete="organization" placeholder="Your company name" required defaultValue={prefill?.company} />
           </label>
         )}
         <label className="booking-field booking-field--full">
