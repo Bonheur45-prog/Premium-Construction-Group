@@ -1,6 +1,9 @@
 import "server-only";
 
-import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+import { Pool, types, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+
+// Calendar dates (DATE columns) stay plain "YYYY-MM-DD" strings, so no time zone can shift them by a day.
+types.setTypeParser(1082, (value: string) => value);
 import { EXTRA_SCHEMA } from "@/lib/db/schema";
 
 const globalForPostgres = globalThis as typeof globalThis & {

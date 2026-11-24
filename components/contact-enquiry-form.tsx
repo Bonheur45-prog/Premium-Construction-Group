@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TurnstileField } from "@/components/turnstile-field";
 
 type EnquiryType = "personal" | "company";
 
 export function ContactEnquiryForm() {
+  // Arriving from the budget estimator (/contact?message=…): start the message with the estimate.
+  const messageField = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const preset = new URLSearchParams(window.location.search).get("message");
+    if (preset && messageField.current && !messageField.current.value) messageField.current.value = `${preset.slice(0, 600)}\n\n`;
+  }, []);
   const [enquiryType, setEnquiryType] = useState<EnquiryType>("personal");
   const [status, setStatus] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -108,7 +114,7 @@ export function ContactEnquiryForm() {
         </label>
         <label className="contact-field contact-field--full">
           <span>A little more about your project <i>*</i></span>
-          <textarea name="message" rows={5} maxLength={5000} minLength={10} placeholder="Share your ideas, location, timeline, or any early questions..." required />
+          <textarea ref={messageField} name="message" rows={5} maxLength={5000} minLength={10} placeholder="Share your ideas, location, timeline, or any early questions..." required />
         </label>
       </div>
 

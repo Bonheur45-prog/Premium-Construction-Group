@@ -49,7 +49,7 @@ function objectLocation(bucket: R2Bucket, key: string) {
   return { host, path, url: `https://${host}${path}` };
 }
 
-async function signedFetch(method: "PUT" | "DELETE", bucket: R2Bucket, key: string, body?: Uint8Array, extraHeaders: Record<string, string> = {}) {
+async function signedFetch(method: "PUT" | "DELETE" | "HEAD" | "GET", bucket: R2Bucket, key: string, body?: Uint8Array, extraHeaders: Record<string, string> = {}) {
   const { host, path, url } = objectLocation(bucket, key);
   const { amzDate, dateStamp } = timestamps();
   const headers: Record<string, string> = { host, "x-amz-content-sha256": "UNSIGNED-PAYLOAD", "x-amz-date": amzDate };
@@ -68,9 +68,10 @@ async function signedFetch(method: "PUT" | "DELETE", bucket: R2Bucket, key: stri
     cache: "no-store",
     signal: AbortSignal.timeout(120_000),
   });
-  if (!response.ok && !(method === "DELETE" && response.status === 404)) {
+  if (!response.ok && !(method === "DELETE" && response.status === 404) && !(method === "HEAD" && response.status === 404)) {
     throw new Error(`R2 ${method} failed (${response.status}): ${(await response.text()).slice(0, 200)}`);
   }
+  return response;
 }
 
 export async function r2Put(bucket: R2Bucket, key: string, body: Uint8Array, contentType: string, cacheControl = "public, max-age=31536000, immutable") {
@@ -81,8 +82,43 @@ export async function r2Delete(bucket: R2Bucket, key: string) {
   await signedFetch("DELETE", bucket, key);
 }
 
+/** Size of a stored object, or null when it doesn't exist (used to confirm direct uploads). */
+export async function r2Size(bucket: R2Bucket, key: string): Promise<number | null> {
+  const response = await signedFetch("HEAD", bucket, key);
+  if (response.status === 404) return null;
+  return Number(response.headers.get("content-length") || 0);
+}
+
+/** The first bytes of an object — enough to check that a direct upload really is the file type it claims. */
+export async function r2Head512(bucket: R2Bucket, key: string): Promise<Uint8Array> {
+  const response = await signedFetch("GET", bucket, key, undefined, { range: "bytes=0-1023" });
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+/**
+ * A one-time upload link: the browser sends the file straight to R2, so large files never pass
+ * through (or slow down) the website's server. Valid for `expiresSeconds`.
+ */
+export function r2SignedPutUrl(bucket: R2Bucket, key: string, expiresSeconds = 900) {
+  const { host, path, url } = objectLocation(bucket, key);
+  const { amzDate, dateStamp } = timestamps();
+  const scope = `${dateStamp}/auto/s3/aws4_request`;
+  const params: Record<string, string> = {
+    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+    "X-Amz-Credential": `${process.env.R2_ACCESS_KEY_ID}/${scope}`,
+    "X-Amz-Date": amzDate,
+    "X-Amz-Expires": String(Math.min(Math.max(expiresSeconds, 60), 3600)),
+    "X-Amz-SignedHeaders": "host",
+  };
+  const query = Object.keys(params).sort().map((name) => `${encodeRfc3986(name)}=${encodeRfc3986(params[name])}`).join("&");
+  const canonicalRequest = ["PUT", path, query, `host:${host}\n`, "host", "UNSIGNED-PAYLOAD"].join("\n");
+  const stringToSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha256Hex(canonicalRequest)].join("\n");
+  const signature = createHmac("sha256", signingKey(dateStamp)).update(stringToSign).digest("hex");
+  return `${url}?${query}&X-Amz-Signature=${signature}`;
+}
+
 /** A link that works for `expiresSeconds` only — used for private client documents. */
-export function r2SignedGetUrl(bucket: R2Bucket, key: string, expiresSeconds = 300, downloadName?: string, inline = false) {
+export function r2SignedGetUrl(bucket: R2Bucket, key: string, expiresSeconds = 300, downloadName?: string, inline = false, overrides: { contentType?: string; contentEncoding?: string } = {}) {
   const { host, path, url } = objectLocation(bucket, key);
   const { amzDate, dateStamp } = timestamps();
   const scope = `${dateStamp}/auto/s3/aws4_request`;
@@ -97,6 +133,8 @@ export function r2SignedGetUrl(bucket: R2Bucket, key: string, expiresSeconds = 3
     const safe = downloadName.replace(/["\\\r\n]/g, "").slice(0, 150) || "file";
     params["response-content-disposition"] = `${inline ? "inline" : "attachment"}; filename="${safe.replace(/[^\x20-\x7e]/g, "_")}"; filename*=UTF-8''${encodeRfc3986(safe)}`;
   }
+  if (overrides.contentType) params["response-content-type"] = overrides.contentType;
+  if (overrides.contentEncoding) params["response-content-encoding"] = overrides.contentEncoding;
   const query = Object.keys(params).sort().map((name) => `${encodeRfc3986(name)}=${encodeRfc3986(params[name])}`).join("&");
   const canonicalRequest = ["GET", path, query, `host:${host}\n`, "host", "UNSIGNED-PAYLOAD"].join("\n");
   const stringToSign = ["AWS4-HMAC-SHA256", amzDate, scope, sha256Hex(canonicalRequest)].join("\n");

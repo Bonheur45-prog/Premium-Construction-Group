@@ -12,7 +12,7 @@ type HeaderSettings = {
   socialLinks: SocialLink[];
 };
 
-export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
+export function SiteHeaderNav({ settings, signupOpen = true }: { settings: HeaderSettings; signupOpen?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -33,7 +33,7 @@ export function SiteHeaderNav({ settings }: { settings: HeaderSettings }) {
           <span>{settings.brand.legalName}</span>
           <span className="topline__right">
             <span className="topline__note">{settings.brand.strapline}</span>
-            <Link className="topline__portal" href="/account/signup">Create an account <span aria-hidden="true">→</span></Link>
+            <Link className="topline__portal" href={signupOpen ? "/account/signup" : "/account/login"}>{signupOpen ? "Create an account" : "Client sign in"} <span aria-hidden="true">→</span></Link>
           </span>
         </div>
       </div>

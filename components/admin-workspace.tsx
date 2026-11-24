@@ -18,11 +18,21 @@ import { CollectionList } from "@/components/admin/cms/collection-list";
 import { EntryEditor } from "@/components/admin/cms/entry-editor";
 import { TrashList } from "@/components/admin/cms/trash";
 import { SiteSettingsEditor } from "@/components/admin/site-settings";
+import { FeaturesScreen } from "@/components/admin/portal/features-screen";
+import { ProgressDesk } from "@/components/admin/portal/progress-desk";
+import { QuotesDesk } from "@/components/admin/portal/quotes-desk";
+import { StaffMessages } from "@/components/admin/portal/staff-messages";
+import { FilesSpace } from "@/components/portal/files-space";
+import { LiveProvider, useLiveEvents } from "@/components/portal/live";
+import type { PortalFeatures } from "@/lib/features-shared";
 import { COLLECTIONS, isCollectionId, type CollectionId } from "@/lib/cms/collections";
 import "@/app/account/portal.css";
 import "@/app/admin/cms.css";
+import "@/app/account/space.css";
 
-export type AdminTab = "overview" | "website" | "pages" | CollectionId | "media" | "header" | "footer" | "settings" | "trash" | "requests" | "clients" | "enquiries" | "reservations" | "users" | "activity";
+export type AdminTab = "overview" | "website" | "pages" | CollectionId | "media" | "header" | "footer" | "settings" | "trash" | "messages" | "quotes" | "progress" | "client-files" | "features" | "requests" | "clients" | "enquiries" | "reservations" | "users" | "activity";
+/** Data the client-space screens need, read on the server by the page. */
+export type PortalContext = { features: PortalFeatures; company: { name: string; email: string; phone: string; address: string }; clientId?: string; clientName?: string };
 type SignedInUser = { id: string; username: string; role: "admin" | "editor" };
 type Badges = Partial<Record<AdminTab, number>>;
 
@@ -64,6 +74,9 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Clients",
     items: [
+      { id: "messages", label: "Messages", href: "/admin/messages", hint: "Every client conversation — chat, files, voice notes, calls", icon: icon(<><path d="M4 5.5h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z" /><path d="M17 9h3a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1v2.5L16 18h-5" /></>) },
+      { id: "quotes", label: "Quotes", href: "/admin/quotes", hint: "Quotes and change orders, revisions and sign-off", icon: icon(<><path d="M6 3.5h9l3.5 3.5v13.5H6z" /><path d="M15 3.5V7h3.5M9 11h6M9 14.5h6M8.5 18.5c1-1 1.8-1 2.5 0s1.5 1 2.5 0" /></>) },
+      { id: "progress", label: "Progress", href: "/admin/progress", hint: "Client project milestones and site photos", icon: icon(<><path d="M8 20.5V4h9l-2 3 2 3H8" /><path d="M2.5 20.5h4v-2h4v2h4v-4h7" /></>) },
       { id: "requests", label: "Requests", href: "/admin/requests", hint: "Client requests: stages, messages, documents", icon: icon(<><path d="M4 5.5h16M4 12h16M4 18.5h10" /><circle cx="18.5" cy="18.5" r="2.5" /></>) },
       { id: "clients", label: "Client accounts", href: "/admin/clients", hint: "Everyone with a portal account", icon: icon(<><circle cx="12" cy="8.5" r="3.8" /><path d="M4.5 20a7.5 7.5 0 0 1 15 0" /></>) },
       { id: "enquiries", label: "Enquiries", href: "/admin/enquiries", hint: "Messages from the contact form — reply by email", icon: icon(<><path d="M3.5 6.5h17v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" /><path d="m3.5 6.5 8.5 7 8.5-7" /></>) },
@@ -74,6 +87,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Administration",
     items: [
       { id: "users", label: "Team & access", href: "/admin/users", hint: "CMS accounts and roles", adminOnly: true, icon: icon(<><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0m2-10.5a3.5 3.5 0 0 1 0 6.8m1 1.7a5 5 0 0 1 3 2" /></>) },
+      { id: "features", label: "Features", href: "/admin/features", hint: "Switch parts of the website and client space on or off", adminOnly: true, icon: icon(<><rect x="3" y="5" width="18" height="6" rx="3" /><circle cx="15" cy="8" r="1.8" /><rect x="3" y="13" width="18" height="6" rx="3" /><circle cx="9" cy="16" r="1.8" /></>) },
       { id: "activity", label: "Activity log", href: "/admin/activity", hint: "Who did what, and when", adminOnly: true, icon: icon(<><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>) },
       { id: "trash", label: "Trash", href: "/admin/trash", hint: "Restore anything you deleted", icon: icon(<><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" /></>) },
     ],
@@ -143,7 +157,7 @@ function CommandPalette({ items, onClose }: { items: NavItem[]; onClose: () => v
   );
 }
 
-export function AdminWorkspace({ initialTab = "overview", entryId }: { initialTab?: AdminTab; entryId?: string }) {
+export function AdminWorkspace({ initialTab = "overview", entryId, portal }: { initialTab?: AdminTab; entryId?: string; portal?: PortalContext }) {
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [authenticated, setAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<SignedInUser | null>(null);
@@ -307,7 +321,9 @@ export function AdminWorkspace({ initialTab = "overview", entryId }: { initialTa
   }
 
   return (
-    <div className={`cms${menuOpen ? " cms--menu-open" : ""}`}>
+    <LiveProvider url="/api/admin/portal/live">
+    <UnreadBadge onCount={(count) => setBadges((current) => ({ ...current, messages: count }))} />
+    <div className={`cms${menuOpen ? " cms--menu-open" : ""}${activeTab === "messages" ? " cms--chat" : ""}`}>
       <aside className="cms-sidebar" aria-label="CMS navigation">
         <div className="cms-sidebar__top">
           <BrandMark inverse />
@@ -363,6 +379,11 @@ export function AdminWorkspace({ initialTab = "overview", entryId }: { initialTa
           {(activeTab === "header" || activeTab === "footer" || activeTab === "settings") && <SiteSettingsEditor screen={activeTab} />}
           {activeTab === "trash" && <TrashList isAdmin={currentUser?.role === "admin"} />}
           {activeTab === "media" && <AdminMediaLibrary />}
+          {activeTab === "messages" && portal && currentUser && <StaffMessages me={{ id: currentUser.id, name: currentUser.username }} features={portal.features} conversationId={entryId} />}
+          {activeTab === "quotes" && portal && <QuotesDesk company={portal.company} defaultVat={18} currency="RWF" />}
+          {activeTab === "progress" && <ProgressDesk isAdmin={currentUser?.role === "admin"} />}
+          {activeTab === "client-files" && portal?.clientId && <FilesSpace side="staff" clientId={portal.clientId} compressImages={portal.features.files.compressImages} maxFileMb={portal.features.files.maxFileMb} />}
+          {activeTab === "features" && currentUser?.role === "admin" && <FeaturesScreen />}
           {activeTab === "requests" && <RequestsBoard />}
           {activeTab === "clients" && <ClientsConsole isAdmin={currentUser?.role === "admin"} />}
           {activeTab === "enquiries" && <EnquiriesInbox onConvert={openRequestFromEnquiry} />}
@@ -373,5 +394,21 @@ export function AdminWorkspace({ initialTab = "overview", entryId }: { initialTa
       </div>
       {paletteOpen && <CommandPalette items={flatItems} onClose={() => setPaletteOpen(false)} />}
     </div>
+    </LiveProvider>
   );
+}
+
+/** Keeps the “Messages” badge in the sidebar up to date with unread client messages. */
+function UnreadBadge({ onCount }: { onCount: (count: number) => void }) {
+  const report = useRef(onCount);
+  useEffect(() => { report.current = onCount; });
+  const refresh = useCallback(async () => {
+    const response = await fetch("/api/admin/portal/conversations", { cache: "no-store" }).catch(() => null);
+    if (!response?.ok) return;
+    const data = (await response.json()) as { conversations: Array<{ unread: number }> };
+    report.current(data.conversations.reduce((sum, item) => sum + item.unread, 0));
+  }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
+  useLiveEvents((event) => { if (event.type === "message" || event.type === "read" || event.type === "resync") void refresh(); });
+  return null;
 }

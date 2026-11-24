@@ -1,3 +1,4 @@
+import { getFeatures } from "@/lib/features";
 import { clientSessionCookie, createClientSessionToken } from "@/lib/clients/session";
 import { createClient, issueClientToken, validatePassword } from "@/lib/clients/store";
 import { sendVerificationEmail } from "@/lib/requests/email";
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     if (!isSameOriginRequest(request)) throw new HttpError(403, "Request could not be verified. Refresh the page and try again.");
+    if (!(await getFeatures()).signup.enabled) throw new HttpError(403, "New accounts aren't open at the moment. Please contact us and we'll help you directly.");
     const body = await readJsonBody(request, 8_000);
     if (cleanText(body.website, 100)) throw new HttpError(400, "Your account couldn't be created.");
     const ip = clientIp(request);

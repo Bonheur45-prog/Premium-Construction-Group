@@ -2,11 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { SocialIcons } from "@/components/social-icons";
 import { getSiteContent } from "@/lib/site-content/store";
+import { getFeatures } from "@/lib/features";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 
 export async function SiteFooter({ showInvitation = true }: { showInvitation?: boolean }) {
-  const { brand, footer, socialLinks, contact } = (await getSiteContent()).siteSettings;
+  const [{ brand, footer, socialLinks, contact }, features] = await Promise.all([getSiteContent().then((content) => content.siteSettings), getFeatures()]);
   return (
     <footer className="site-footer">
+      {features.whatsapp.enabled && <WhatsAppButton number={features.whatsapp.number || contact.whatsapp} message={features.whatsapp.message} />}
       {showInvitation && <div className="site-footer__invitation">
         <div className="shell site-footer__invitation-inner">
           <div className="site-footer__invitation-copy">
@@ -66,7 +69,7 @@ export async function SiteFooter({ showInvitation = true }: { showInvitation?: b
               {contact.openingHours && <li className="site-footer__hours">{contact.openingHours}</li>}
             </ul>
           )}
-          <Link href="/account/signup" className="site-footer__portal-link">Create an account <span aria-hidden="true">→</span></Link>
+          <Link href={features.signup.enabled ? "/account/signup" : "/account/login"} className="site-footer__portal-link">{features.signup.enabled ? "Create an account" : "Client sign in"} <span aria-hidden="true">→</span></Link>
         </div>
       </div>
 

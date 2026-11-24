@@ -223,4 +223,166 @@ export const EXTRA_SCHEMA = `
     value TEXT NOT NULL DEFAULT '',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
+
+  /* ---------- Client portal: chat room ---------- */
+  CREATE TABLE IF NOT EXISTS pcg_conversations (
+    id TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL REFERENCES pcg_clients(id) ON DELETE CASCADE,
+    subject TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'waiting', 'closed')),
+    request_id TEXT REFERENCES pcg_requests(id) ON DELETE SET NULL,
+    project_id TEXT,
+    assigned_to TEXT NOT NULL DEFAULT '',
+    created_by_type TEXT NOT NULL CHECK (created_by_type IN ('client', 'staff')),
+    last_message_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_preview TEXT NOT NULL DEFAULT '',
+    client_read_seq BIGINT NOT NULL DEFAULT 0,
+    staff_read_seq BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_conversations_client ON pcg_conversations(client_id, last_message_at DESC);
+  CREATE INDEX IF NOT EXISTS pcg_conversations_recent ON pcg_conversations(last_message_at DESC);
+
+  CREATE TABLE IF NOT EXISTS pcg_messages (
+    seq BIGSERIAL PRIMARY KEY,
+    id TEXT NOT NULL UNIQUE,
+    conversation_id TEXT NOT NULL REFERENCES pcg_conversations(id) ON DELETE CASCADE,
+    author_type TEXT NOT NULL CHECK (author_type IN ('client', 'staff', 'system')),
+    author_id TEXT NOT NULL DEFAULT '',
+    author_name TEXT NOT NULL DEFAULT '',
+    kind TEXT NOT NULL DEFAULT 'text' CHECK (kind IN ('text', 'voice', 'call', 'quote', 'milestone', 'meeting', 'system')),
+    body TEXT NOT NULL DEFAULT '',
+    file_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+    reply_to TEXT NOT NULL DEFAULT '',
+    internal BOOLEAN NOT NULL DEFAULT FALSE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    edited_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_messages_conversation ON pcg_messages(conversation_id, seq);
+  CREATE INDEX IF NOT EXISTS pcg_messages_search ON pcg_messages USING gin (to_tsvector('simple', body));
+
+  /* ---------- Client portal: file space ---------- */
+  CREATE TABLE IF NOT EXISTS pcg_client_folders (
+    id TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL REFERENCES pcg_clients(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE TABLE IF NOT EXISTS pcg_client_files (
+    id TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL REFERENCES pcg_clients(id) ON DELETE CASCADE,
+    folder_id TEXT REFERENCES pcg_client_folders(id) ON DELETE SET NULL,
+    family_id TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    name TEXT NOT NULL,
+    mime TEXT NOT NULL,
+    size_bytes BIGINT NOT NULL,
+    original_bytes BIGINT NOT NULL DEFAULT 0,
+    encoding TEXT NOT NULL DEFAULT '',
+    storage TEXT NOT NULL CHECK (storage IN ('r2', 'local')),
+    object_key TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'ready')),
+    uploaded_by_type TEXT NOT NULL CHECK (uploaded_by_type IN ('client', 'staff')),
+    uploaded_by_id TEXT NOT NULL DEFAULT '',
+    uploaded_by_name TEXT NOT NULL DEFAULT '',
+    counts_quota BOOLEAN NOT NULL DEFAULT TRUE,
+    meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_client_files_client ON pcg_client_files(client_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS pcg_client_files_family ON pcg_client_files(family_id, version DESC);
+
+  /* ---------- Client portal: quotes, change orders and sign-off ---------- */
+  CREATE TABLE IF NOT EXISTS pcg_quotes (
+    id TEXT PRIMARY KEY,
+    ref TEXT NOT NULL UNIQUE,
+    client_id TEXT NOT NULL REFERENCES pcg_clients(id) ON DELETE CASCADE,
+    conversation_id TEXT REFERENCES pcg_conversations(id) ON DELETE SET NULL,
+    project_id TEXT,
+    kind TEXT NOT NULL CHECK (kind IN ('quote', 'change_order')),
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'accepted', 'changes_requested', 'declined', 'withdrawn')),
+    currency TEXT NOT NULL DEFAULT 'RWF',
+    created_by TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_quotes_client ON pcg_quotes(client_id, updated_at DESC);
+  CREATE TABLE IF NOT EXISTS pcg_quote_revisions (
+    id TEXT PRIMARY KEY,
+    quote_id TEXT NOT NULL REFERENCES pcg_quotes(id) ON DELETE CASCADE,
+    revision INTEGER NOT NULL,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    notes TEXT NOT NULL DEFAULT '',
+    vat_rate NUMERIC(5,2) NOT NULL DEFAULT 18,
+    subtotal BIGINT NOT NULL DEFAULT 0,
+    vat BIGINT NOT NULL DEFAULT 0,
+    total BIGINT NOT NULL DEFAULT 0,
+    valid_until DATE,
+    sent_at TIMESTAMPTZ,
+    sent_by TEXT NOT NULL DEFAULT '',
+    response TEXT NOT NULL DEFAULT '' CHECK (response IN ('', 'accepted', 'changes_requested', 'declined')),
+    response_note TEXT NOT NULL DEFAULT '',
+    responded_at TIMESTAMPTZ,
+    signed_name TEXT NOT NULL DEFAULT '',
+    signed_ip TEXT NOT NULL DEFAULT '',
+    signed_agent TEXT NOT NULL DEFAULT '',
+    signature_hash TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (quote_id, revision)
+  );
+
+  /* ---------- Client portal: project progress ---------- */
+  CREATE TABLE IF NOT EXISTS pcg_client_projects (
+    id TEXT PRIMARY KEY,
+    client_id TEXT NOT NULL REFERENCES pcg_clients(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    location TEXT NOT NULL DEFAULT '',
+    summary TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'planning' CHECK (status IN ('planning', 'active', 'on_hold', 'completed')),
+    start_date DATE,
+    target_date DATE,
+    cover_file_id TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_client_projects_client ON pcg_client_projects(client_id, updated_at DESC);
+  CREATE TABLE IF NOT EXISTS pcg_milestones (
+    id TEXT PRIMARY KEY,
+    project_id TEXT NOT NULL REFERENCES pcg_client_projects(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    due_date DATE,
+    status TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'in_progress', 'done')),
+    weight INTEGER NOT NULL DEFAULT 1,
+    photo_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_milestones_project ON pcg_milestones(project_id, sort_order);
+  CREATE TABLE IF NOT EXISTS pcg_milestone_comments (
+    id TEXT PRIMARY KEY,
+    milestone_id TEXT NOT NULL REFERENCES pcg_milestones(id) ON DELETE CASCADE,
+    author_type TEXT NOT NULL CHECK (author_type IN ('client', 'staff')),
+    author_name TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  /* ---------- Phone notifications ---------- */
+  CREATE TABLE IF NOT EXISTS pcg_push_subscriptions (
+    endpoint TEXT PRIMARY KEY,
+    owner_type TEXT NOT NULL CHECK (owner_type IN ('client', 'staff')),
+    owner_id TEXT NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS pcg_push_owner ON pcg_push_subscriptions(owner_type, owner_id);
+
 `;
